@@ -53,6 +53,10 @@
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--green-d);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;display:none;z-index:30;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
   footer{margin-top:18px;padding:14px 16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
   footer b{color:var(--green-d);font-weight:600}
+
+  @keyframes blrise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes blfade{from{opacity:0}to{opacity:1}}
+  @media(prefers-reduced-motion:reduce){[data-bl-rev]{animation:none!important}}
 </style>
 </head>
 <body>
@@ -235,6 +239,47 @@
     } catch (e) { $('modalErr').textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'; $('modalErr').style.display = 'block'; }
     $('saveBtn').disabled = false;
   });
+</script>
+
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function countUp(el){
+    if(reduce || el.getAttribute('data-bl-done')) return;
+    var m = String(el.textContent).trim().match(/^(\d+)(%?)$/);
+    if(!m) return;
+    var target = +m[1], suf = m[2];
+    el.setAttribute('data-bl-done','1');
+    if(target === 0){ el.textContent = '0'+suf; return; }
+    var dur=850, start=performance.now();
+    function tick(now){var p=Math.min(1,(now-start)/dur);var e=1-Math.pow(1-p,3);el.textContent=Math.round(target*e)+suf;if(p<1)requestAnimationFrame(tick);else el.textContent=target+suf;}
+    requestAnimationFrame(tick);
+  }
+  function revealStagger(els, base, anim){
+    if(reduce) return;
+    var i=0;
+    els.forEach(function(el){
+      if(el.getAttribute('data-bl-rev')) return;
+      el.setAttribute('data-bl-rev','1');
+      el.style.animation=(anim||'blrise')+' .5s cubic-bezier(.22,.61,.36,1) both';
+      el.style.animationDelay=((base||0)+Math.min(i,10)*0.045)+'s';
+      i++;
+    });
+  }
+  function sweep(){
+    document.querySelectorAll('.chip b, .num').forEach(countUp);
+    revealStagger([].slice.call(document.querySelectorAll('.metric, .chip')),0,'blrise');
+    revealStagger([].slice.call(document.querySelectorAll('.card, .panel, .login-card')),0.05,'blrise');
+    revealStagger([].slice.call(document.querySelectorAll('.item, .qrcard')),0.1,'blrise');
+    revealStagger([].slice.call(document.querySelectorAll('#tbody tr, #rosterBody tr, .recent li')),0.04,'blfade');
+  }
+  function start(){
+    sweep();
+    var mo = new MutationObserver(function(){ sweep(); });
+    mo.observe(document.body, {childList:true, subtree:true});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
 </script>
 </body>
 </html>
