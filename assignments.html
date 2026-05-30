@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>งานที่มอบหมาย · ระบบส่งงานบ้านละลม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#5E9A2D;--green-d:#2F5511;--green-l:#EFF4E4;--yellow:#F7C948;--yellow-d:#6B4D06;--bg:#F4F8EC;--ink:#33421C;--muted:#6E7B56;--line:#D2DEBC;--white:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--green);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+  .brand .lg{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px;font-weight:700;flex:none}
+  .brand .lg img{width:100%;height:100%;object-fit:contain}
+  .user{display:flex;align-items:center;gap:9px;font-size:13px}
+  .btn-logout{background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;cursor:pointer}
+  .btn-logout:hover{background:rgba(255,255,255,.28)}
+  nav.nav{background:#fff;border-bottom:0.5px solid var(--line);display:flex;gap:2px;padding:0 10px;overflow-x:auto;white-space:nowrap}
+  nav.nav a{padding:12px 13px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.nav a:hover{color:var(--green-d)}
+  nav.nav a.active{color:var(--green-d);font-weight:600;border-bottom-color:var(--green)}
+  main{flex:1;width:100%;max-width:980px;margin:0 auto;padding:16px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  h1{font-size:19px;font-weight:600;color:var(--green-d)}
+  .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .btn{border:none;border-radius:9px;padding:10px 15px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:filter .15s,transform .05s}
+  .btn:active{transform:scale(.99)} .btn:hover{filter:brightness(1.05)}
+  .btn-green{background:var(--green);color:#fff}
+  .btn-yellow{background:var(--yellow);color:var(--yellow-d)}
+  .btn-outline{background:#fff;color:var(--green-d);border:0.5px solid #BFD49A}
+  .btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
+  select{height:42px;border:0.5px solid #CBD9B0;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+  select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .filterbar{margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .list{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+  .item{background:#fff;border:0.5px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px}
+  .item .body{flex:1;min-width:0}
+  .item .t{font-size:15px;font-weight:600;color:var(--green-d)}
+  .item .m{font-size:13px;color:var(--muted);margin-top:3px}
+  .item .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+  .b-open{background:#DCEFC4;color:var(--green-d)} .b-closed{background:#E8E8DF;color:#5F5E5A}
+  .mini{border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+  .mini-out{background:#fff;color:var(--green-d);border:0.5px solid #BFD49A} .mini-grey{background:#fff;color:#5F5E5A;border:0.5px solid #D8D8CF}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px;background:#fff;border:0.5px dashed var(--line);border-radius:12px}
+  .note{display:flex;gap:9px;align-items:center;background:#FBE9C2;color:var(--yellow-d);border-radius:9px;padding:10px 12px;font-size:13px;margin-top:14px}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(33,50,17,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:20}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:480px;padding:20px 20px 22px;animation:rise .25s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .modal h2{font-size:17px;font-weight:600;color:var(--green-d)}
+  label{display:block;font-size:13px;color:#3F5226;margin:13px 0 5px}
+  label .n{display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--green-l);color:var(--green-d);font-size:11px;align-items:center;justify-content:center;margin-right:6px}
+  input,textarea{width:100%;border:0.5px solid #CBD9B0;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff}
+  input:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  textarea{min-height:64px;resize:vertical}
+  .ro{display:flex;align-items:center;gap:9px;background:var(--green-l);border-radius:9px;padding:10px 12px;font-size:14px;color:var(--green-d)}
+  .tag{font-size:11px;background:#D8E8BF;color:var(--green-d);padding:2px 8px;border-radius:20px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:520px){.two{grid-template-columns:1fr}}
+  .flow{display:flex;align-items:stretch;gap:6px;margin-top:6px;flex-wrap:wrap}
+  .sbox{flex:1;min-width:96px;border-radius:8px;padding:8px 10px}
+  .sbox .tt{font-size:12px;font-weight:600} .sbox .dd{font-size:11px;margin-top:1px}
+  .s-no{background:#ECEBE4} .s-no .tt{color:#444441} .s-no .dd{color:#6B6A64}
+  .s-ok{background:#DCEFC4} .s-ok .tt{color:var(--green-d)} .s-ok .dd{color:#4C7A1A}
+  .s-ck{background:#FBE6BD} .s-ck .tt{color:var(--yellow-d)} .s-ck .dd{color:#9A7415}
+  .modal-actions{display:flex;gap:10px;margin-top:20px}
+  .modal-err{display:none;margin-top:12px;font-size:13px;background:#FBE2E2;color:#9B2C2C;border-radius:8px;padding:8px 11px}
+  footer{margin-top:18px;padding:14px 16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--green-d);font-weight:600}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">บ้านละลม</span></div>
+    <div class="user"><span id="userName">—</span><button class="btn-logout" id="logoutBtn">ออกจากระบบ</button></div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+
+  <main>
+    <div class="top">
+      <div><h1>งานที่มอบหมาย</h1><div class="sub">สร้างและจัดการงานในวิชาที่สอน</div></div>
+      <button class="btn btn-green" id="newBtn">+ สร้างงานใหม่</button>
+    </div>
+
+    <div class="filterbar">
+      <span class="sub">วิชา:</span>
+      <select id="subjectSel"><option value="">— เลือกวิชา —</option></select>
+    </div>
+    <div class="note" id="noSubjectNote" style="display:none"><span>⚠️</span><span>ยังไม่มีวิชาที่คุณรับผิดชอบ กรุณาให้ผู้ดูแลเพิ่มวิชาให้ก่อน</span></div>
+
+    <div class="list" id="list"></div>
+    <div class="empty" id="emptyState" style="display:none">เลือกวิชาเพื่อดูรายการงาน หรือกด "สร้างงานใหม่"</div>
+  </main>
+
+  <footer>ผู้พัฒนา: <b>นายชิติพัทธ์ นิลวรรณ</b><br>ครูโรงเรียนบ้านละลม สพป.ศรีสะเกษ เขต 3</footer>
+
+  <!-- Modal สร้าง/แก้ไขงาน -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2 id="modalTitle">สร้างงานใหม่</h2>
+      <label for="title"><span class="n">1</span>ชื่องาน</label>
+      <input id="title" type="text" placeholder="เช่น ใบงานที่ 5 เรื่องเศษส่วน">
+      <label><span class="n">2</span>รายวิชา</label>
+      <div class="ro"><span id="subjectLabel">—</span><span class="tag">วิชาที่สอน</span></div>
+      <label for="detail"><span class="n">3</span>รายละเอียดของงาน</label>
+      <textarea id="detail" placeholder="อธิบายสิ่งที่ให้นักเรียนทำ"></textarea>
+      <div class="two">
+        <div><label for="assignedDate"><span class="n">4</span>วันที่สั่งงาน</label><input id="assignedDate" type="date"></div>
+        <div><label for="dueDate"><span class="n">5</span>กำหนดส่งงาน</label><input id="dueDate" type="datetime-local"></div>
+      </div>
+      <label><span class="n">6</span>สถานะการส่งงาน <span style="color:#9AA383;font-weight:400">— ระบบติดตามอัตโนมัติ</span></label>
+      <div class="flow">
+        <div class="sbox s-no"><div class="tt">ยังไม่ส่งงาน</div><div class="dd">ค่าเริ่มต้น</div></div>
+        <div class="sbox s-ok"><div class="tt">ส่งงานแล้ว</div><div class="dd">สแกน QR</div></div>
+        <div class="sbox s-ck"><div class="tt">ตรวจแล้ว</div><div class="dd">ครูติ๊กเอง</div></div>
+      </div>
+      <div class="modal-err" id="modalErr"></div>
+      <div class="modal-actions">
+        <button class="btn btn-green" id="saveBtn" style="flex:1">บันทึกงาน</button>
+        <button class="btn btn-outline" id="cancelBtn">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ====== วาง URL /exec ของ Web App ที่ deploy จาก Code.gs ตรงนี้ ======
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCTrn5F2tZ-UJiBazA1PA2np5Lwwhy_TYYie7liGg9LFIcaavqF78PLiPqaC3TwyXt/exec';
+
+  const token = sessionStorage.getItem('bl_token');
+  const session = JSON.parse(sessionStorage.getItem('bl_session') || 'null');
+  if (!token || !session) { location.replace('login.html'); }
+
+  async function api(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action: action, token: token }, payload || {}))
+    });
+    return res.json();
+  }
+  const $ = function (id) { return document.getElementById(id); };
+
+  // ---- เมนูนำทาง ----
+  const NAV = [
+    { h: 'dashboard.html', l: 'แดชบอร์ด' }, { h: 'scan.html', l: 'สแกนรับงาน' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย' }, { h: 'review.html', l: 'ตรวจงาน' },
+    { h: 'qrcard.html', l: 'สร้าง QR' }, { h: 'students.html', l: 'นักเรียน' },
+    { h: 'subjects.html', l: 'วิชา' }, { h: 'teachers.html', l: 'ครูผู้สอน', admin: true },
+    { h: 'reports.html', l: 'รายงาน' }, { h: 'settings.html', l: 'ตั้งค่า', admin: true }
+  ];
+  function renderNav(active) {
+    const role = (session && session.role) || 'teacher';
+    const nav = $('nav');
+    NAV.forEach(function (it) {
+      if (it.admin && role !== 'admin') return;
+      const a = document.createElement('a');
+      a.href = it.h; a.textContent = it.l;
+      if (it.h === active) a.className = 'active';
+      nav.appendChild(a);
+    });
+  }
+  renderNav('assignments.html');
+  if (session) $('userName').textContent = session.name || 'ผู้ใช้';
+
+  $('logoutBtn').addEventListener('click', async function () {
+    try { await api('logout'); } catch (e) {}
+    sessionStorage.removeItem('bl_token'); sessionStorage.removeItem('bl_session');
+    location.replace('login.html');
+  });
+
+  (async function () {
+    try {
+      const c = await api('getConfig');
+      if (c && c.ok) {
+        if (c.schoolName) $('schoolName').textContent = c.schoolName;
+        if (c.logoUrl) { const img = document.createElement('img'); img.src = c.logoUrl; img.alt = ''; $('logo').textContent = ''; $('logo').appendChild(img); }
+      }
+    } catch (e) {}
+  })();
+
+  // ---- โหลดวิชา ----
+  let subjects = [];
+  (async function loadSubjects() {
+    try {
+      const r = await api('listSubjects');
+      if (r && r.ok && r.subjects.length) {
+        subjects = r.subjects;
+        subjects.forEach(function (s) {
+          const o = document.createElement('option');
+          o.value = s.subjectId; o.textContent = s.name + ' · ' + s.roomLabel;
+          $('subjectSel').appendChild(o);
+        });
+        $('emptyState').style.display = 'block';
+      } else {
+        $('noSubjectNote').style.display = 'flex';
+        $('newBtn').disabled = true;
+      }
+    } catch (e) { $('noSubjectNote').style.display = 'flex'; }
+  })();
+
+  function currentSubject() {
+    const id = $('subjectSel').value;
+    return subjects.filter(function (s) { return s.subjectId === id; })[0] || null;
+  }
+
+  $('subjectSel').addEventListener('change', loadAssignments);
+
+  async function loadAssignments() {
+    const sub = currentSubject();
+    const list = $('list'); list.innerHTML = '';
+    if (!sub) { $('emptyState').style.display = 'block'; return; }
+    $('emptyState').style.display = 'none';
+    try {
+      const r = await api('listAssignments', { filters: { subjectId: sub.subjectId } });
+      if (!r || !r.ok) return;
+      if (!r.assignments.length) {
+        list.innerHTML = '<div class="empty">ยังไม่มีงานในวิชานี้ กด "สร้างงานใหม่" เพื่อเริ่ม</div>';
+        return;
+      }
+      r.assignments.forEach(function (a) { list.appendChild(renderItem(a)); });
+    } catch (e) {}
+  }
+
+  function renderItem(a) {
+    const isOpen = a.status === 'เปิด';
+    const div = document.createElement('div');
+    div.className = 'item';
+    const badge = isOpen ? '<span class="badge b-open">เปิดรับ</span>' : '<span class="badge b-closed">ปิดรับ</span>';
+    div.innerHTML =
+      '<div class="body">' +
+        '<div class="t">' + escapeHtml(a.title) + '</div>' +
+        '<div class="m">' + escapeHtml(a.subjectName) + ' · ' + escapeHtml(a.roomLabel) +
+        ' · สั่ง ' + fmt(a.assignedDate) + ' · ครบกำหนด ' + fmt(a.dueDate) + '</div>' +
+        (a.detail ? '<div class="m">' + escapeHtml(a.detail) + '</div>' : '') +
+      '</div>' +
+      '<div class="actions">' + badge +
+        '<button class="mini mini-out" data-edit="' + a.assignmentId + '">แก้ไข</button>' +
+        '<button class="mini mini-grey" data-toggle="' + a.assignmentId + '" data-status="' + (isOpen ? 'ปิด' : 'เปิด') + '">' + (isOpen ? 'ปิดรับ' : 'เปิดรับ') + '</button>' +
+      '</div>';
+    div._data = a;
+    return div;
+  }
+
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(v) { return String(v == null ? '' : v).replace('T', ' '); }
+
+  // ---- คลิกในรายการ (แก้ไข / เปิด-ปิด) ----
+  $('list').addEventListener('click', async function (e) {
+    const editBtn = e.target.closest('button[data-edit]');
+    const toggleBtn = e.target.closest('button[data-toggle]');
+    if (editBtn) {
+      const item = editBtn.closest('.item');
+      openModal(item._data);
+    } else if (toggleBtn) {
+      toggleBtn.disabled = true;
+      try {
+        await api('closeAssignment', { assignmentId: toggleBtn.getAttribute('data-toggle'), status: toggleBtn.getAttribute('data-status') });
+        loadAssignments();
+      } catch (err) { toggleBtn.disabled = false; }
+    }
+  });
+
+  // ---- Modal ----
+  let editingId = null;
+  function todayStr() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  $('newBtn').addEventListener('click', function () {
+    const sub = currentSubject();
+    if (!sub) { $('subjectSel').focus(); $('emptyState').textContent = 'กรุณาเลือกวิชาก่อนสร้างงาน'; $('emptyState').style.display = 'block'; return; }
+    openModal(null);
+  });
+
+  function openModal(data) {
+    $('modalErr').style.display = 'none';
+    if (data) {
+      editingId = data.assignmentId;
+      $('modalTitle').textContent = 'แก้ไขงาน';
+      $('title').value = data.title || '';
+      $('detail').value = data.detail || '';
+      $('assignedDate').value = String(data.assignedDate || '').substring(0, 10) || todayStr();
+      $('dueDate').value = String(data.dueDate || '').substring(0, 16);
+      $('subjectLabel').textContent = data.subjectName + ' · ' + data.roomLabel;
+    } else {
+      editingId = null;
+      const sub = currentSubject();
+      $('modalTitle').textContent = 'สร้างงานใหม่';
+      $('title').value = ''; $('detail').value = '';
+      $('assignedDate').value = todayStr();
+      $('dueDate').value = todayStr() + 'T16:30';
+      $('subjectLabel').textContent = sub ? (sub.name + ' · ' + sub.roomLabel) : '—';
+    }
+    $('overlay').classList.add('show');
+  }
+  function closeModal() { $('overlay').classList.remove('show'); }
+  $('cancelBtn').addEventListener('click', closeModal);
+  $('overlay').addEventListener('click', function (e) { if (e.target === $('overlay')) closeModal(); });
+
+  $('saveBtn').addEventListener('click', async function () {
+    const title = $('title').value.trim();
+    const dueDate = $('dueDate').value;
+    if (!title) { showModalErr('กรุณากรอกชื่องาน'); return; }
+    if (!dueDate) { showModalErr('กรุณาระบุกำหนดส่งงาน'); return; }
+    const sub = currentSubject();
+    const payload = {
+      assignment: {
+        assignmentId: editingId || undefined,
+        subjectId: sub ? sub.subjectId : undefined,
+        title: title, detail: $('detail').value.trim(),
+        assignedDate: $('assignedDate').value, dueDate: dueDate
+      }
+    };
+    $('saveBtn').disabled = true;
+    try {
+      const r = await api('saveAssignment', payload);
+      if (r && r.ok) { closeModal(); loadAssignments(); }
+      else showModalErr((r && r.error) || 'บันทึกไม่สำเร็จ');
+    } catch (e) { showModalErr('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); }
+    $('saveBtn').disabled = false;
+  });
+  function showModalErr(t) { $('modalErr').textContent = t; $('modalErr').style.display = 'block'; }
+</script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>นักเรียน · ระบบส่งงานบ้านละลม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#5E9A2D;--green-d:#2F5511;--green-l:#EFF4E4;--yellow:#F7C948;--yellow-d:#6B4D06;--bg:#F4F8EC;--ink:#33421C;--muted:#6E7B56;--line:#D2DEBC;--white:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--green);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+  .brand .lg{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px;font-weight:700;flex:none}
+  .brand .lg img{width:100%;height:100%;object-fit:contain}
+  .user{display:flex;align-items:center;gap:9px;font-size:13px}
+  .btn-logout{background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;cursor:pointer}
+  .btn-logout:hover{background:rgba(255,255,255,.28)}
+  nav.nav{background:#fff;border-bottom:0.5px solid var(--line);display:flex;gap:2px;padding:0 10px;overflow-x:auto;white-space:nowrap}
+  nav.nav a{padding:12px 13px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.nav a:hover{color:var(--green-d)} nav.nav a.active{color:var(--green-d);font-weight:600;border-bottom-color:var(--green)}
+  main{flex:1;width:100%;max-width:980px;margin:0 auto;padding:16px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  h1{font-size:19px;font-weight:600;color:var(--green-d)} .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .actions-top{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{border:none;border-radius:9px;padding:10px 14px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:filter .15s,transform .05s}
+  .btn:active{transform:scale(.99)} .btn:hover{filter:brightness(1.05)}
+  .btn-green{background:var(--green);color:#fff} .btn-yellow{background:var(--yellow);color:var(--yellow-d)} .btn-outline{background:#fff;color:var(--green-d);border:0.5px solid #BFD49A}
+  .btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
+  select,input,textarea{font-family:inherit;color:var(--ink)}
+  .filterbar{margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  select{height:42px;border:0.5px solid #CBD9B0;border-radius:10px;padding:0 12px;font-size:14px;background:#fff}
+  select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .panel{background:#fff;border:0.5px solid var(--line);border-radius:14px;margin-top:14px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:620px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:0.5px solid #EDF1E2}
+  th{color:var(--muted);font-weight:600;font-size:12px;background:#FAFCF4} tr:last-child td{border-bottom:none}
+  .pill{font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+  .p-on{background:#DCEFC4;color:var(--green-d)} .p-off{background:#E8E8DF;color:#5F5E5A}
+  .yes{color:var(--green);font-weight:600} .no{color:#B6BBA6}
+  .mini{border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;background:#fff;color:var(--green-d);border:0.5px solid #BFD49A}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(33,50,17,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:20}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:460px;padding:20px;animation:rise .25s ease both}
+  .modal.wide{max-width:560px}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .modal h2{font-size:17px;font-weight:600;color:var(--green-d)}
+  label{display:block;font-size:13px;color:#3F5226;margin:12px 0 5px}
+  input,textarea{width:100%;border:0.5px solid #CBD9B0;border-radius:9px;padding:9px 12px;font-size:14px;background:#fff}
+  input:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  input[readonly]{background:#F1F3EC;color:var(--muted)}
+  textarea{min-height:130px;resize:vertical;font-family:ui-monospace,monospace;font-size:13px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media(max-width:480px){.two{grid-template-columns:1fr}}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
+  .code{background:#F1F3EC;border-radius:6px;padding:2px 6px;font-family:ui-monospace,monospace;font-size:12px}
+  .modal-actions{display:flex;gap:10px;margin-top:18px}
+  .modal-err{display:none;margin-top:12px;font-size:13px;background:#FBE2E2;color:#9B2C2C;border-radius:8px;padding:8px 11px}
+  .preview{margin-top:12px;max-height:200px;overflow:auto;border:0.5px solid var(--line);border-radius:9px}
+  .preview table{min-width:0;font-size:13px} .preview td,.preview th{padding:7px 9px}
+  footer{margin-top:18px;padding:14px 16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--green-d);font-weight:600}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">บ้านละลม</span></div>
+    <div class="user"><span id="userName">—</span><button class="btn-logout" id="logoutBtn">ออกจากระบบ</button></div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+
+  <main>
+    <div class="top">
+      <div><h1>นักเรียน</h1><div class="sub">เพิ่ม แก้ไข และนำเข้ารายชื่อนักเรียน</div></div>
+      <div class="actions-top">
+        <button class="btn btn-outline" id="importBtn">นำเข้า CSV</button>
+        <button class="btn btn-green" id="newBtn">+ เพิ่มนักเรียน</button>
+      </div>
+    </div>
+
+    <div class="filterbar">
+      <span class="sub">ห้อง:</span>
+      <select id="roomSel"><option value="">ทุกห้อง</option></select>
+      <span class="sub" id="count"></span>
+    </div>
+
+    <div class="panel">
+      <table>
+        <thead><tr><th style="width:60px">เลขที่</th><th>ชื่อ-สกุล</th><th style="width:80px">ห้อง</th><th style="width:70px">บัตร QR</th><th style="width:90px">LINE ผู้ปกครอง</th><th style="width:80px">สถานะ</th><th style="width:70px"></th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyState">กำลังโหลด...</div>
+    </div>
+  </main>
+
+  <footer>ผู้พัฒนา: <b>นายชิติพัทธ์ นิลวรรณ</b><br>ครูโรงเรียนบ้านละลม สพป.ศรีสะเกษ เขต 3</footer>
+
+  <!-- Modal เพิ่ม/แก้ไขนักเรียน -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2 id="modalTitle">เพิ่มนักเรียน</h2>
+      <div class="two">
+        <div><label for="seatNo">เลขที่</label><input id="seatNo" type="number" min="1"></div>
+        <div><label for="studentId">รหัสนักเรียน</label><input id="studentId" type="text" placeholder="เว้นว่างให้ระบบสร้างให้"></div>
+      </div>
+      <label for="name">ชื่อ-สกุล</label><input id="name" type="text" placeholder="เช่น เด็กชายสมชาย ใจดี">
+      <div class="two">
+        <div><label for="cls">ชั้น</label><input id="cls" type="text" placeholder="เช่น ป.6"></div>
+        <div><label for="room">ห้อง</label><input id="room" type="text" placeholder="เช่น 1"></div>
+      </div>
+      <label for="parentLineId">LINE ผู้ปกครอง (ไม่บังคับ)</label><input id="parentLineId" type="text" placeholder="ปกติให้ผู้ปกครองผูกเองผ่าน LINE">
+      <div class="two">
+        <div><label for="year">ปีการศึกษา</label><input id="year" type="text"></div>
+        <div id="statusWrap" style="display:none"><label for="statusSel">สถานะ</label>
+          <select id="statusSel" style="width:100%;height:40px"><option value="active">ใช้งาน</option><option value="inactive">ปิดใช้งาน</option></select>
+        </div>
+      </div>
+      <div class="modal-err" id="modalErr"></div>
+      <div class="modal-actions">
+        <button class="btn btn-green" id="saveBtn" style="flex:1">บันทึก</button>
+        <button class="btn btn-outline" id="cancelBtn">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal นำเข้า CSV -->
+  <div class="overlay" id="importOverlay">
+    <div class="modal wide">
+      <h2>นำเข้านักเรียนจาก CSV</h2>
+      <div class="hint">วางข้อมูลจาก Excel หรือ CSV โดยเรียงคอลัมน์ดังนี้ (คั่นด้วยจุลภาคหรือแท็บ):<br>
+        <span class="code">เลขที่ , ชื่อ-สกุล , ชั้น , ห้อง , รหัสนักเรียน(ไม่บังคับ) , LINE ผู้ปกครอง(ไม่บังคับ)</span><br>
+        เช่น <span class="code">1,เด็กชายสมชาย ใจดี,ป.6,1</span></div>
+      <textarea id="csvText" placeholder="1,เด็กชายสมชาย ใจดี,ป.6,1&#10;2,เด็กหญิงมานี รักเรียน,ป.6,1"></textarea>
+      <div class="modal-actions" style="margin-top:10px">
+        <button class="btn btn-outline" id="parseBtn">ตรวจสอบข้อมูล</button>
+      </div>
+      <div class="preview" id="preview" style="display:none"></div>
+      <div class="modal-err" id="importErr"></div>
+      <div class="modal-actions">
+        <button class="btn btn-green" id="confirmImportBtn" style="flex:1" disabled>นำเข้า</button>
+        <button class="btn btn-outline" id="cancelImportBtn">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ====== วาง URL /exec ของ Web App ที่ deploy จาก Code.gs ตรงนี้ ======
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCTrn5F2tZ-UJiBazA1PA2np5Lwwhy_TYYie7liGg9LFIcaavqF78PLiPqaC3TwyXt/exec';
+
+  const token = sessionStorage.getItem('bl_token');
+  const session = JSON.parse(sessionStorage.getItem('bl_session') || 'null');
+  if (!token || !session) { location.replace('login.html'); }
+
+  async function api(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action: action, token: token }, payload || {}))
+    });
+    return res.json();
+  }
+  const $ = function (id) { return document.getElementById(id); };
+
+  const NAV = [
+    { h: 'dashboard.html', l: 'แดชบอร์ด' }, { h: 'scan.html', l: 'สแกนรับงาน' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย' }, { h: 'review.html', l: 'ตรวจงาน' },
+    { h: 'qrcard.html', l: 'สร้าง QR' }, { h: 'students.html', l: 'นักเรียน' },
+    { h: 'subjects.html', l: 'วิชา' }, { h: 'teachers.html', l: 'ครูผู้สอน', admin: true },
+    { h: 'reports.html', l: 'รายงาน' }, { h: 'settings.html', l: 'ตั้งค่า', admin: true }
+  ];
+  (function renderNav() {
+    const role = (session && session.role) || 'teacher';
+    NAV.forEach(function (it) {
+      if (it.admin && role !== 'admin') return;
+      const a = document.createElement('a'); a.href = it.h; a.textContent = it.l;
+      if (it.h === 'students.html') a.className = 'active';
+      $('nav').appendChild(a);
+    });
+  })();
+  if (session) $('userName').textContent = session.name || 'ผู้ใช้';
+
+  $('logoutBtn').addEventListener('click', async function () {
+    try { await api('logout'); } catch (e) {}
+    sessionStorage.removeItem('bl_token'); sessionStorage.removeItem('bl_session');
+    location.replace('login.html');
+  });
+
+  let currentYear = '';
+  (async function () {
+    try {
+      const c = await api('getConfig');
+      if (c && c.ok) {
+        currentYear = c.currentYear || '';
+        if (c.schoolName) $('schoolName').textContent = c.schoolName;
+        if (c.logoUrl) { const img = document.createElement('img'); img.src = c.logoUrl; img.alt = ''; $('logo').textContent = ''; $('logo').appendChild(img); }
+      }
+    } catch (e) {}
+  })();
+
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  let students = [];
+  async function loadStudents() {
+    $('emptyState').textContent = 'กำลังโหลด...'; $('emptyState').style.display = 'block';
+    try {
+      const r = await api('listStudents');
+      if (r && r.ok) { students = r.students; buildRoomFilter(); render(); }
+    } catch (e) { $('emptyState').textContent = 'โหลดข้อมูลไม่สำเร็จ'; }
+  }
+
+  function buildRoomFilter() {
+    const cur = $('roomSel').value;
+    const rooms = {}; students.forEach(function (s) { rooms[s.roomLabel] = true; });
+    const keys = Object.keys(rooms).sort();
+    $('roomSel').innerHTML = '<option value="">ทุกห้อง</option>';
+    keys.forEach(function (rl) { const o = document.createElement('option'); o.value = rl; o.textContent = 'ห้อง ' + rl; $('roomSel').appendChild(o); });
+    if (cur) $('roomSel').value = cur;
+  }
+
+  $('roomSel').addEventListener('change', render);
+
+  function render() {
+    const room = $('roomSel').value;
+    const rows = students.filter(function (s) { return !room || s.roomLabel === room; });
+    const body = $('tbody'); body.innerHTML = '';
+    $('count').textContent = rows.length + ' คน';
+    if (!rows.length) { $('emptyState').textContent = 'ยังไม่มีนักเรียน'; $('emptyState').style.display = 'block'; return; }
+    $('emptyState').style.display = 'none';
+    rows.forEach(function (s) {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + escapeHtml(s.seatNo) + '</td>' +
+        '<td>' + escapeHtml(s.name) + '</td>' +
+        '<td>' + escapeHtml(s.roomLabel) + '</td>' +
+        '<td class="' + (s.hasQr ? 'yes' : 'no') + '">' + (s.hasQr ? '✓' : '—') + '</td>' +
+        '<td class="' + (s.hasParent ? 'yes' : 'no') + '">' + (s.hasParent ? '✓' : '—') + '</td>' +
+        '<td><span class="pill ' + (s.status === 'active' ? 'p-on' : 'p-off') + '">' + (s.status === 'active' ? 'ใช้งาน' : 'ปิด') + '</span></td>' +
+        '<td><button class="mini" data-edit="' + escapeHtml(s.studentId) + '">แก้ไข</button></td>';
+      body.appendChild(tr);
+    });
+  }
+
+  $('tbody').addEventListener('click', function (e) {
+    const b = e.target.closest('button[data-edit]');
+    if (!b) return;
+    const id = b.getAttribute('data-edit');
+    const s = students.filter(function (x) { return x.studentId === id; })[0];
+    if (s) openModal(s);
+  });
+
+  // ---- Modal เพิ่ม/แก้ไข ----
+  let editingId = null;
+  $('newBtn').addEventListener('click', function () { openModal(null); });
+
+  function openModal(s) {
+    $('modalErr').style.display = 'none';
+    if (s) {
+      editingId = s.studentId;
+      $('modalTitle').textContent = 'แก้ไขนักเรียน';
+      $('seatNo').value = s.seatNo || ''; $('studentId').value = s.studentId; $('studentId').readOnly = true;
+      $('name').value = s.name || ''; $('cls').value = s.cls || ''; $('room').value = s.room || '';
+      $('parentLineId').value = ''; // ไม่ดึงค่า LINE มาแสดงเพื่อความเป็นส่วนตัว
+      $('parentLineId').placeholder = s.hasParent ? 'มีการผูก LINE แล้ว (เว้นว่างไว้เพื่อคงค่าเดิม)' : 'ปกติให้ผู้ปกครองผูกเอง';
+      $('year').value = s.year || currentYear;
+      $('statusWrap').style.display = 'block'; $('statusSel').value = s.status || 'active';
+    } else {
+      editingId = null;
+      $('modalTitle').textContent = 'เพิ่มนักเรียน';
+      $('seatNo').value = ''; $('studentId').value = ''; $('studentId').readOnly = false;
+      $('name').value = ''; $('cls').value = ''; $('room').value = '';
+      $('parentLineId').value = ''; $('parentLineId').placeholder = 'ปกติให้ผู้ปกครองผูกเอง';
+      $('year').value = currentYear; $('statusWrap').style.display = 'none';
+    }
+    $('overlay').classList.add('show');
+  }
+  function closeModal() { $('overlay').classList.remove('show'); }
+  $('cancelBtn').addEventListener('click', closeModal);
+  $('overlay').addEventListener('click', function (e) { if (e.target === $('overlay')) closeModal(); });
+
+  $('saveBtn').addEventListener('click', async function () {
+    const name = $('name').value.trim(), cls = $('cls').value.trim(), room = $('room').value.trim();
+    if (!name || !cls || !room) { showErr($('modalErr'), 'กรอกชื่อ ชั้น และห้องให้ครบ'); return; }
+    const student = {
+      studentId: editingId || ($('studentId').value.trim() || undefined),
+      seatNo: $('seatNo').value, name: name, cls: cls, room: room,
+      year: $('year').value.trim() || currentYear
+    };
+    const lineVal = $('parentLineId').value.trim();
+    if (lineVal) student.parentLineId = lineVal;
+    if (editingId) student.status = $('statusSel').value;
+    $('saveBtn').disabled = true;
+    try {
+      const r = await api('saveStudent', { student: student });
+      if (r && r.ok) { closeModal(); loadStudents(); } else showErr($('modalErr'), (r && r.error) || 'บันทึกไม่สำเร็จ');
+    } catch (e) { showErr($('modalErr'), 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); }
+    $('saveBtn').disabled = false;
+  });
+  function showErr(el, t) { el.textContent = t; el.style.display = 'block'; }
+
+  // ---- นำเข้า CSV ----
+  let parsedRows = [];
+  $('importBtn').addEventListener('click', function () {
+    $('csvText').value = ''; $('preview').style.display = 'none'; $('preview').innerHTML = '';
+    $('importErr').style.display = 'none'; $('confirmImportBtn').disabled = true; parsedRows = [];
+    $('importOverlay').classList.add('show');
+  });
+  $('cancelImportBtn').addEventListener('click', function () { $('importOverlay').classList.remove('show'); });
+  $('importOverlay').addEventListener('click', function (e) { if (e.target === $('importOverlay')) $('importOverlay').classList.remove('show'); });
+
+  $('parseBtn').addEventListener('click', function () {
+    $('importErr').style.display = 'none';
+    const text = $('csvText').value;
+    parsedRows = parseCsv(text);
+    if (!parsedRows.length) { showErr($('importErr'), 'ไม่พบข้อมูลที่อ่านได้ ตรวจสอบรูปแบบอีกครั้ง'); $('confirmImportBtn').disabled = true; $('preview').style.display = 'none'; return; }
+    renderPreview(parsedRows);
+    $('confirmImportBtn').disabled = false;
+  });
+
+  function parseCsv(text) {
+    const lines = String(text || '').split(/\r?\n/);
+    const rows = [];
+    lines.forEach(function (line) {
+      const t = line.trim();
+      if (!t) return;
+      const cells = (t.indexOf('\t') >= 0 ? t.split('\t') : t.split(',')).map(function (c) { return c.trim(); });
+      // ข้ามแถวหัวตารางถ้าตรวจพบ
+      if (/เลขที่|ชื่อ|รหัส/.test(cells[0]) && /ชื่อ|ชั้น/.test(cells.join(''))) return;
+      if (!cells[1]) return; // ต้องมีชื่ออย่างน้อย (คอลัมน์ที่ 2)
+      rows.push({
+        seatNo: cells[0] || '', name: cells[1] || '', cls: cells[2] || '', room: cells[3] || '',
+        studentId: cells[4] || '', parentLineId: cells[5] || ''
+      });
+    });
+    return rows.filter(function (r) { return r.name && r.cls && r.room; });
+  }
+
+  function renderPreview(rows) {
+    let html = '<table><thead><tr><th>เลขที่</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>ห้อง</th><th>รหัส</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      html += '<tr><td>' + escapeHtml(r.seatNo) + '</td><td>' + escapeHtml(r.name) + '</td><td>' + escapeHtml(r.cls) + '</td><td>' + escapeHtml(r.room) + '</td><td>' + escapeHtml(r.studentId || '(อัตโนมัติ)') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    $('preview').innerHTML = '<div style="padding:8px 10px;font-size:12px;color:#5E7338">พบ ' + rows.length + ' รายการ</div>' + html;
+    $('preview').style.display = 'block';
+  }
+
+  $('confirmImportBtn').addEventListener('click', async function () {
+    if (!parsedRows.length) return;
+    this.disabled = true; this.textContent = 'กำลังนำเข้า...';
+    try {
+      const r = await api('importStudents', { rows: parsedRows });
+      if (r && r.ok) {
+        $('importOverlay').classList.remove('show');
+        loadStudents();
+      } else { showErr($('importErr'), (r && r.error) || 'นำเข้าไม่สำเร็จ'); }
+    } catch (e) { showErr($('importErr'), 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); }
+    this.disabled = false; this.textContent = 'นำเข้า';
+  });
+
+  loadStudents();
+</script>
+</body>
+</html>

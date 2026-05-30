@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สร้าง QR Card · ระบบส่งงานบ้านละลม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{--green:#5E9A2D;--green-d:#2F5511;--green-l:#EFF4E4;--yellow:#F7C948;--yellow-d:#6B4D06;--bg:#F4F8EC;--ink:#33421C;--muted:#6E7B56;--line:#D2DEBC;--white:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--green);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+  .brand .lg{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px;font-weight:700;flex:none}
+  .brand .lg img{width:100%;height:100%;object-fit:contain}
+  .user{display:flex;align-items:center;gap:9px;font-size:13px}
+  .btn-logout{background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;cursor:pointer}
+  .btn-logout:hover{background:rgba(255,255,255,.28)}
+  nav.nav{background:#fff;border-bottom:0.5px solid var(--line);display:flex;gap:2px;padding:0 10px;overflow-x:auto;white-space:nowrap}
+  nav.nav a{padding:12px 13px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.nav a:hover{color:var(--green-d)} nav.nav a.active{color:var(--green-d);font-weight:600;border-bottom-color:var(--green)}
+  main{flex:1;width:100%;max-width:980px;margin:0 auto;padding:16px}
+  h1{font-size:19px;font-weight:600;color:var(--green-d)}
+  .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .note{display:flex;gap:9px;align-items:center;background:#FBE9C2;color:var(--yellow-d);border-radius:9px;padding:10px 12px;font-size:13px;margin-top:12px}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  select{height:42px;border:0.5px solid #CBD9B0;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+  select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .btn{border:none;border-radius:9px;padding:10px 14px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:filter .15s,transform .05s}
+  .btn:active{transform:scale(.99)} .btn:hover{filter:brightness(1.05)}
+  .btn-green{background:var(--green);color:#fff}
+  .btn-yellow{background:var(--yellow);color:var(--yellow-d)}
+  .btn-outline{background:#fff;color:var(--green-d);border:0.5px solid #BFD49A}
+  .btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
+  .chk-regen{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer}
+  .chk-regen input{width:17px;height:17px;accent-color:var(--green)}
+  .count{font-size:13px;color:var(--muted)}
+  .cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-top:16px}
+  .qrcard{position:relative;border:0.5px solid var(--line);border-radius:12px;padding:14px 12px;background:#fff;text-align:center}
+  .qrcard.sel{outline:2px solid var(--green);outline-offset:-2px}
+  .qrcard .cb{position:absolute;top:9px;right:9px;width:20px;height:20px;accent-color:var(--green);cursor:pointer}
+  .qrhead{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted);margin-bottom:9px}
+  .qrhead .lg{width:16px;height:16px;border-radius:50%;background:var(--green-l);color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:9px;font-weight:700}
+  .qrhead .lg img{width:100%;height:100%;object-fit:contain}
+  .qrbox{width:118px;height:118px;margin:0 auto 9px;display:flex;align-items:center;justify-content:center}
+  .qrbox img,.qrbox canvas{width:118px!important;height:118px!important}
+  .qrbox.empty{border:1.5px dashed #C7D3AC;border-radius:8px;color:#9AA383;font-size:12px;flex-direction:column;gap:4px}
+  .qname{font-size:14px;font-weight:600;color:var(--green-d)}
+  .qmeta{font-size:12px;color:var(--muted);margin-top:1px}
+  .qid{font-size:11px;color:#9AA383;margin-top:2px}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px;background:#fff;border:0.5px dashed var(--line);border-radius:12px;margin-top:16px}
+  footer{margin-top:18px;padding:14px 16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--green-d);font-weight:600}
+  @media print{
+    header,nav.nav,.controls,.note,h1,.sub,footer,.count{display:none!important}
+    body{background:#fff} main{padding:0;max-width:none}
+    .cardgrid{grid-template-columns:repeat(3,1fr);gap:8px;margin:0}
+    .qrcard{border:1px solid #333;border-radius:8px;break-inside:avoid;outline:none!important}
+    .qrcard .cb{display:none}
+    .qrcard.no-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">บ้านละลม</span></div>
+    <div class="user"><span id="userName">—</span><button class="btn-logout" id="logoutBtn">ออกจากระบบ</button></div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+
+  <main>
+    <h1>สร้าง QR Card นักเรียน</h1>
+    <div class="sub">สร้างบัตร QR สำหรับนักเรียน เพื่อใช้สแกนส่งงาน</div>
+    <div class="note"><span>🔒</span><span>สร้างได้เฉพาะนักเรียนในห้องที่คุณรับผิดชอบเท่านั้น</span></div>
+
+    <div class="controls">
+      <select id="roomSel"><option value="">— เลือกห้อง —</option></select>
+      <span class="count" id="count"></span>
+      <span style="flex:1"></span>
+      <label class="chk-regen"><input type="checkbox" id="regen"> ออก Token ใหม่ (บัตรเก่าใช้ไม่ได้)</label>
+      <button class="btn btn-outline" id="selectAllBtn" disabled>เลือกทั้งหมด</button>
+      <button class="btn btn-green" id="genBtn" disabled>ออกบัตร QR ที่เลือก</button>
+      <button class="btn btn-yellow" id="printBtn" disabled>พิมพ์บัตรที่เลือก</button>
+    </div>
+
+    <div class="cardgrid" id="grid"></div>
+    <div class="empty" id="emptyState">เลือกห้องเพื่อแสดงรายชื่อนักเรียน</div>
+  </main>
+
+  <footer>ผู้พัฒนา: <b>นายชิติพัทธ์ นิลวรรณ</b><br>ครูโรงเรียนบ้านละลม สพป.ศรีสะเกษ เขต 3</footer>
+
+<script>
+  // ====== วาง URL /exec ของ Web App ที่ deploy จาก Code.gs ตรงนี้ ======
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCTrn5F2tZ-UJiBazA1PA2np5Lwwhy_TYYie7liGg9LFIcaavqF78PLiPqaC3TwyXt/exec';
+
+  const token = sessionStorage.getItem('bl_token');
+  const session = JSON.parse(sessionStorage.getItem('bl_session') || 'null');
+  if (!token || !session) { location.replace('login.html'); }
+
+  async function api(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action: action, token: token }, payload || {}))
+    });
+    return res.json();
+  }
+  const $ = function (id) { return document.getElementById(id); };
+
+  const NAV = [
+    { h: 'dashboard.html', l: 'แดชบอร์ด' }, { h: 'scan.html', l: 'สแกนรับงาน' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย' }, { h: 'review.html', l: 'ตรวจงาน' },
+    { h: 'qrcard.html', l: 'สร้าง QR' }, { h: 'students.html', l: 'นักเรียน' },
+    { h: 'subjects.html', l: 'วิชา' }, { h: 'teachers.html', l: 'ครูผู้สอน', admin: true },
+    { h: 'reports.html', l: 'รายงาน' }, { h: 'settings.html', l: 'ตั้งค่า', admin: true }
+  ];
+  (function renderNav() {
+    const role = (session && session.role) || 'teacher';
+    NAV.forEach(function (it) {
+      if (it.admin && role !== 'admin') return;
+      const a = document.createElement('a');
+      a.href = it.h; a.textContent = it.l;
+      if (it.h === 'qrcard.html') a.className = 'active';
+      $('nav').appendChild(a);
+    });
+  })();
+  if (session) $('userName').textContent = session.name || 'ผู้ใช้';
+
+  $('logoutBtn').addEventListener('click', async function () {
+    try { await api('logout'); } catch (e) {}
+    sessionStorage.removeItem('bl_token'); sessionStorage.removeItem('bl_session');
+    location.replace('login.html');
+  });
+
+  let schoolName = 'โรงเรียนบ้านละลม';
+  let logoUrl = '';
+  (async function () {
+    try {
+      const c = await api('getConfig');
+      if (c && c.ok) {
+        if (c.schoolName) { schoolName = c.schoolName; $('schoolName').textContent = c.schoolName; }
+        if (c.logoUrl) { logoUrl = c.logoUrl; const img = document.createElement('img'); img.src = c.logoUrl; img.alt = ''; $('logo').textContent = ''; $('logo').appendChild(img); }
+      }
+    } catch (e) {}
+  })();
+
+  // ---- โหลดนักเรียน (backend กรองตามห้องที่รับผิดชอบให้แล้ว) ----
+  let allStudents = [];
+  (async function loadStudents() {
+    try {
+      const r = await api('listStudents');
+      if (r && r.ok) {
+        allStudents = r.students;
+        const rooms = {};
+        allStudents.forEach(function (s) { rooms[s.roomLabel] = true; });
+        const keys = Object.keys(rooms).sort();
+        keys.forEach(function (rl) {
+          const o = document.createElement('option'); o.value = rl; o.textContent = 'ห้อง ' + rl;
+          $('roomSel').appendChild(o);
+        });
+        if (!keys.length) $('emptyState').textContent = 'ยังไม่มีนักเรียนในห้องที่คุณรับผิดชอบ';
+      }
+    } catch (e) {}
+  })();
+
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function logoMarkup() { return logoUrl ? '<span class="lg"><img src="' + escapeHtml(logoUrl) + '" alt=""></span>' : '<span class="lg">โล</span>'; }
+
+  let roomStudents = [];
+  $('roomSel').addEventListener('change', function () {
+    renderRoom(this.value);
+  });
+
+  function renderRoom(roomLabel) {
+    const grid = $('grid'); grid.innerHTML = '';
+    roomStudents = allStudents.filter(function (s) { return s.roomLabel === roomLabel; });
+    if (!roomLabel || !roomStudents.length) {
+      $('emptyState').style.display = 'block';
+      $('emptyState').textContent = roomLabel ? 'ไม่มีนักเรียนในห้องนี้' : 'เลือกห้องเพื่อแสดงรายชื่อนักเรียน';
+      setButtons(false);
+      $('count').textContent = '';
+      return;
+    }
+    $('emptyState').style.display = 'none';
+    roomStudents.forEach(function (s) { grid.appendChild(renderCard(s)); });
+    setButtons(true);
+    updateCount();
+  }
+
+  function renderCard(s) {
+    const card = document.createElement('div');
+    card.className = 'qrcard sel';
+    card.setAttribute('data-id', s.studentId);
+    card.innerHTML =
+      '<input type="checkbox" class="cb" checked>' +
+      '<div class="qrhead">' + logoMarkup() + ' ' + escapeHtml(schoolName) + '</div>' +
+      '<div class="qrbox' + (s.qrToken ? '' : ' empty') + '"></div>' +
+      '<div class="qname">' + escapeHtml(s.name) + '</div>' +
+      '<div class="qmeta">เลขที่ ' + escapeHtml(s.seatNo) + ' · ' + escapeHtml(s.roomLabel) + '</div>' +
+      '<div class="qid">รหัส ' + escapeHtml(s.studentId) + '</div>';
+    const box = card.querySelector('.qrbox');
+    if (s.qrToken) { drawQr(box, s.qrToken); } else { box.textContent = 'ยังไม่มีบัตร'; }
+    return card;
+  }
+
+  function drawQr(box, text) {
+    box.innerHTML = ''; box.classList.remove('empty');
+    if (typeof QRCode === 'undefined') { box.textContent = 'โหลด QR ไม่ได้'; box.classList.add('empty'); return; }
+    new QRCode(box, { text: text, width: 118, height: 118, correctLevel: QRCode.CorrectLevel.M });
+  }
+
+  function setButtons(on) {
+    $('selectAllBtn').disabled = !on;
+    $('genBtn').disabled = !on;
+    $('printBtn').disabled = !on;
+  }
+  function getCards() { return Array.prototype.slice.call($('grid').querySelectorAll('.qrcard')); }
+  function selectedIds() {
+    return getCards().filter(function (c) { return c.querySelector('.cb').checked; })
+      .map(function (c) { return c.getAttribute('data-id'); });
+  }
+  function updateCount() {
+    $('count').textContent = roomStudents.length + ' คน · เลือก ' + selectedIds().length;
+  }
+
+  $('grid').addEventListener('change', function (e) {
+    const cb = e.target.closest('.cb');
+    if (!cb) return;
+    cb.closest('.qrcard').classList.toggle('sel', cb.checked);
+    updateCount();
+  });
+
+  $('selectAllBtn').addEventListener('click', function () {
+    const cards = getCards();
+    const allOn = cards.every(function (c) { return c.querySelector('.cb').checked; });
+    cards.forEach(function (c) { c.querySelector('.cb').checked = !allOn; c.classList.toggle('sel', !allOn); });
+    this.textContent = allOn ? 'เลือกทั้งหมด' : 'ไม่เลือกเลย';
+    updateCount();
+  });
+
+  $('genBtn').addEventListener('click', async function () {
+    const ids = selectedIds();
+    if (!ids.length) { return; }
+    const regenerate = $('regen').checked;
+    this.disabled = true; this.textContent = 'กำลังออกบัตร...';
+    try {
+      const r = await api('generateQrTokens', { studentIds: ids, regenerate: regenerate });
+      if (r && r.ok) {
+        r.cards.forEach(function (card) {
+          // อัปเดต token ในข้อมูล และวาด QR ใหม่
+          allStudents.forEach(function (s) { if (s.studentId === card.studentId) { s.qrToken = card.qrToken; s.hasQr = true; } });
+          const el = $('grid').querySelector('.qrcard[data-id="' + cssEscape(card.studentId) + '"]');
+          if (el) drawQr(el.querySelector('.qrbox'), card.qrToken);
+        });
+      }
+    } catch (e) {}
+    this.disabled = false; this.textContent = 'ออกบัตร QR ที่เลือก';
+    updateCount();
+  });
+
+  function cssEscape(s) { return String(s).replace(/["\\]/g, '\\$&'); }
+
+  // ---- พิมพ์เฉพาะบัตรที่เลือก ----
+  $('printBtn').addEventListener('click', function () {
+    const cards = getCards();
+    let printable = 0;
+    cards.forEach(function (c) {
+      const checked = c.querySelector('.cb').checked;
+      const hasQr = !c.querySelector('.qrbox').classList.contains('empty');
+      if (checked && hasQr) { c.classList.remove('no-print'); printable++; }
+      else { c.classList.add('no-print'); }
+    });
+    if (!printable) { cards.forEach(function (c) { c.classList.remove('no-print'); }); return; }
+    window.print();
+  });
+  window.addEventListener('afterprint', function () {
+    getCards().forEach(function (c) { c.classList.remove('no-print'); });
+  });
+</script>
+</body>
+</html>

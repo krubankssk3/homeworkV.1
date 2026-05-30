@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ผูก LINE ผู้ปกครอง · ระบบส่งงานบ้านละลม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#5E9A2D;--green-d:#2F5511;--green-l:#EFF4E4;--yellow:#F7C948;--yellow-d:#6B4D06;--line-green:#06C755;--bg:#F4F8EC;--ink:#33421C;--muted:#6E7B56;--line:#D2DEBC;--white:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--green);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:11px}
+  .brand{display:flex;align-items:center;gap:11px;font-size:17px;font-weight:600}
+  .brand .lg{width:36px;height:36px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:16px;font-weight:700;flex:none}
+  .brand .lg img{width:100%;height:100%;object-fit:contain}
+  main{flex:1;width:100%;max-width:540px;margin:0 auto;padding:18px}
+  h1{font-size:20px;font-weight:600;color:var(--green-d)} .sub{font-size:14px;color:var(--muted);margin-top:4px;line-height:1.6}
+  .card{background:#fff;border:0.5px solid var(--line);border-radius:14px;padding:18px;margin-top:16px}
+  .step{display:flex;gap:13px;padding:13px 0;border-bottom:0.5px solid #EDF1E2}
+  .step:last-child{border-bottom:none}
+  .num{width:30px;height:30px;border-radius:50%;background:var(--green-l);color:var(--green-d);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+  .step .t{font-size:15px;font-weight:600;color:var(--ink)} .step .d{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.6}
+  .code{display:inline-block;background:#F1F3EC;border-radius:6px;padding:3px 9px;font-family:ui-monospace,monospace;font-size:13px;color:var(--green-d);margin-top:5px}
+  .btn-line{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--line-green);color:#fff;border:none;border-radius:10px;padding:13px 18px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;text-decoration:none;width:100%;margin-top:10px}
+  .btn-line:hover{filter:brightness(1.05)}
+  .lookup{margin-top:10px;display:flex;gap:8px}
+  .lookup input{flex:1;height:44px;border:0.5px solid #CBD9B0;border-radius:10px;padding:0 13px;font-size:15px;font-family:inherit;color:var(--ink)}
+  .lookup input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .btn{border:none;border-radius:10px;padding:0 18px;height:44px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;background:var(--green);color:#fff}
+  .result{margin-top:12px;border-radius:10px;padding:12px 14px;font-size:14px;display:none}
+  .r-ok{background:#DCEFC4;color:var(--green-d)} .r-no{background:#FBE2E2;color:#9B2C2C}
+  .note{background:#FBE9C2;color:var(--yellow-d);border-radius:9px;padding:10px 12px;font-size:13px;margin-top:14px;line-height:1.6}
+  footer{margin-top:20px;padding:16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--green-d);font-weight:600}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">บ้านละลม</span></div>
+  </header>
+
+  <main>
+    <h1>เชื่อมบัญชีผู้ปกครอง</h1>
+    <div class="sub">เชื่อม LINE ของคุณเข้ากับบุตรหลาน เพื่อรับแจ้งเตือนการส่งงานและงานค้างส่งโดยอัตโนมัติ</div>
+
+    <div class="card">
+      <div class="step"><div class="num">1</div><div><div class="t">เพิ่มเพื่อนบัญชีทางการของโรงเรียน</div><div class="d">กดปุ่มด้านล่างเพื่อเพิ่ม LINE Official Account ของโรงเรียนเป็นเพื่อน</div>
+        <a class="btn-line" id="addFriendBtn" href="#" target="_blank" rel="noopener">เพิ่มเพื่อนใน LINE</a></div></div>
+      <div class="step"><div class="num">2</div><div><div class="t">ค้นหารหัสนักเรียนของบุตรหลาน</div><div class="d">หากยังไม่ทราบรหัส สอบถามได้จากครูประจำชั้น หรือดูบนบัตร QR ของนักเรียน</div></div></div>
+      <div class="step"><div class="num">3</div><div><div class="t">พิมพ์ข้อความผูกบัญชีในแชต LINE</div><div class="d">ในห้องแชตกับบัญชีทางการของโรงเรียน พิมพ์คำว่า "ผูก" ตามด้วยรหัสนักเรียน เช่น</div>
+        <span class="code">ผูก 10821</span></div></div>
+      <div class="step"><div class="num">4</div><div><div class="t">เสร็จสิ้น</div><div class="d">ระบบจะยืนยันการเชื่อมบัญชี จากนั้นคุณจะได้รับแจ้งเตือนทุกครั้งที่บุตรหลานส่งงาน</div></div></div>
+    </div>
+
+    <div class="note" id="lineDisabledNote" style="display:none">ขณะนี้โรงเรียนยังไม่ได้เปิดใช้งานการแจ้งเตือนผ่าน LINE กรุณาติดต่อทางโรงเรียน</div>
+
+    <div class="card">
+      <div class="t" style="font-size:15px;font-weight:600;color:var(--green-d)">ตรวจสอบรหัสนักเรียน</div>
+      <div class="sub" style="margin-top:4px">พิมพ์ชื่อหรือนามสกุลเพื่อค้นหารหัสนักเรียน (สำหรับใช้พิมพ์ในขั้นตอนที่ 3)</div>
+      <div class="lookup"><input id="q" type="text" placeholder="เช่น สมชาย"><button class="btn" id="searchBtn">ค้นหา</button></div>
+      <div class="result" id="result"></div>
+    </div>
+  </main>
+
+  <footer>ผู้พัฒนา: <b>นายชิติพัทธ์ นิลวรรณ</b><br>ครูโรงเรียนบ้านละลม สพป.ศรีสะเกษ เขต 3</footer>
+
+<script>
+  // ====== วาง URL /exec ของ Web App ที่ deploy จาก Code.gs ตรงนี้ ======
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCTrn5F2tZ-UJiBazA1PA2np5Lwwhy_TYYie7liGg9LFIcaavqF78PLiPqaC3TwyXt/exec';
+
+  async function api(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+    });
+    return res.json();
+  }
+  const $ = function (id) { return document.getElementById(id); };
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  (async function () {
+    try {
+      const c = await api('getConfig');
+      if (c && c.ok) {
+        if (c.schoolName) $('schoolName').textContent = c.schoolName;
+        if (c.logoUrl) { const img = document.createElement('img'); img.src = c.logoUrl; img.alt = ''; $('logo').textContent = ''; $('logo').appendChild(img); }
+        if (c.lineAddFriendUrl) { $('addFriendBtn').href = c.lineAddFriendUrl; }
+        else { $('addFriendBtn').style.display = 'none'; }
+        if (!c.parentLookupEnabled) { var card = $('q').closest('.card'); if (card) card.style.display = 'none'; }
+      }
+    } catch (e) {}
+  })();
+
+  $('searchBtn').addEventListener('click', doSearch);
+  $('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') doSearch(); });
+
+  async function doSearch() {
+    const q = $('q').value.trim();
+    const box = $('result');
+    if (!q) { box.style.display = 'none'; return; }
+    box.style.display = 'block'; box.className = 'result'; box.textContent = 'กำลังค้นหา...';
+    try {
+      const r = await api('lookupStudent', { q: q });
+      if (r && r.ok && r.matches && r.matches.length) {
+        let html = '';
+        r.matches.forEach(function (m) {
+          html += '<div style="padding:6px 0;border-bottom:0.5px solid rgba(0,0,0,.06)">' + escapeHtml(m.name) + ' · ' + escapeHtml(m.roomLabel) + ' · รหัส <b>' + escapeHtml(m.studentId) + '</b></div>';
+        });
+        box.className = 'result r-ok'; box.innerHTML = html;
+      } else {
+        box.className = 'result r-no'; box.textContent = 'ไม่พบนักเรียนที่ตรงกับคำค้นหา กรุณาสอบถามครูประจำชั้น';
+      }
+    } catch (e) { box.className = 'result r-no'; box.textContent = 'เชื่อมต่อไม่ได้ กรุณาลองใหม่'; }
+  }
+</script>
+</body>
+</html>

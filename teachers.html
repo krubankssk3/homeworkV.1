@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ครูผู้สอน · ระบบส่งงานบ้านละลม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#5E9A2D;--green-d:#2F5511;--green-l:#EFF4E4;--yellow:#F7C948;--yellow-d:#6B4D06;--bg:#F4F8EC;--ink:#33421C;--muted:#6E7B56;--line:#D2DEBC;--white:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--green);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+  .brand .lg{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px;font-weight:700;flex:none}
+  .brand .lg img{width:100%;height:100%;object-fit:contain}
+  .user{display:flex;align-items:center;gap:9px;font-size:13px}
+  .btn-logout{background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;cursor:pointer}
+  .btn-logout:hover{background:rgba(255,255,255,.28)}
+  nav.nav{background:#fff;border-bottom:0.5px solid var(--line);display:flex;gap:2px;padding:0 10px;overflow-x:auto;white-space:nowrap}
+  nav.nav a{padding:12px 13px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.nav a:hover{color:var(--green-d)} nav.nav a.active{color:var(--green-d);font-weight:600;border-bottom-color:var(--green)}
+  main{flex:1;width:100%;max-width:920px;margin:0 auto;padding:16px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  h1{font-size:19px;font-weight:600;color:var(--green-d)} .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .btn{border:none;border-radius:9px;padding:10px 14px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:filter .15s,transform .05s}
+  .btn:active{transform:scale(.99)} .btn:hover{filter:brightness(1.05)}
+  .btn-green{background:var(--green);color:#fff} .btn-outline{background:#fff;color:var(--green-d);border:0.5px solid #BFD49A}
+  .btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
+  .panel{background:#fff;border:0.5px solid var(--line);border-radius:14px;margin-top:16px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:600px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:0.5px solid #EDF1E2}
+  th{color:var(--muted);font-weight:600;font-size:12px;background:#FAFCF4} tr:last-child td{border-bottom:none}
+  .pill{font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+  .p-on{background:#DCEFC4;color:var(--green-d)} .p-off{background:#E8E8DF;color:#5F5E5A} .p-admin{background:#FBE6BD;color:var(--yellow-d)}
+  .rowact{display:flex;gap:6px;flex-wrap:wrap}
+  .mini{border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+  .mini-out{background:#fff;color:var(--green-d);border:0.5px solid #BFD49A} .mini-grey{background:#fff;color:#5F5E5A;border:0.5px solid #D8D8CF} .mini-y{background:var(--yellow);color:var(--yellow-d)}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px}
+  .denied{max-width:420px;margin:60px auto;text-align:center;background:#fff;border:0.5px solid var(--line);border-radius:16px;padding:34px 26px}
+  .denied .ic{font-size:40px} .denied h2{font-size:18px;color:var(--green-d);margin-top:8px} .denied p{font-size:14px;color:var(--muted);margin-top:6px}
+  .overlay{position:fixed;inset:0;background:rgba(33,50,17,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:20}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:430px;padding:20px;animation:rise .25s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .modal h2{font-size:17px;font-weight:600;color:var(--green-d)}
+  label{display:block;font-size:13px;color:#3F5226;margin:12px 0 5px}
+  input,select{width:100%;border:0.5px solid #CBD9B0;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff;height:40px}
+  input:focus,select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .modal-actions{display:flex;gap:10px;margin-top:18px}
+  .modal-err{display:none;margin-top:12px;font-size:13px;background:#FBE2E2;color:#9B2C2C;border-radius:8px;padding:8px 11px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--green-d);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;display:none;z-index:30;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
+  footer{margin-top:18px;padding:14px 16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--green-d);font-weight:600}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">บ้านละลม</span></div>
+    <div class="user"><span id="userName">—</span><button class="btn-logout" id="logoutBtn">ออกจากระบบ</button></div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+
+  <main id="main"></main>
+
+  <footer>ผู้พัฒนา: <b>นายชิติพัทธ์ นิลวรรณ</b><br>ครูโรงเรียนบ้านละลม สพป.ศรีสะเกษ เขต 3</footer>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2 id="modalTitle">เพิ่มครู</h2>
+      <label for="name">ชื่อ-สกุล</label><input id="name" type="text" placeholder="เช่น นายสมชาย ใจดี">
+      <label for="username">ชื่อผู้ใช้ (username)</label><input id="username" type="text" placeholder="เช่น somchai">
+      <div id="pwWrap"><label for="password">รหัสผ่าน</label><input id="password" type="text" placeholder="เว้นว่างจะใช้ 123456"><div class="hint" id="pwHint">เว้นว่างจะตั้งเป็น 123456 ให้เปลี่ยนภายหลัง</div></div>
+      <label for="roleSel">บทบาท</label>
+      <select id="roleSel"><option value="teacher">ครูผู้สอน</option><option value="admin">ผู้ดูแลระบบ</option></select>
+      <div class="modal-err" id="modalErr"></div>
+      <div class="modal-actions">
+        <button class="btn btn-green" id="saveBtn" style="flex:1">บันทึก</button>
+        <button class="btn btn-outline" id="cancelBtn">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  // ====== วาง URL /exec ของ Web App ที่ deploy จาก Code.gs ตรงนี้ ======
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCTrn5F2tZ-UJiBazA1PA2np5Lwwhy_TYYie7liGg9LFIcaavqF78PLiPqaC3TwyXt/exec';
+
+  const token = sessionStorage.getItem('bl_token');
+  const session = JSON.parse(sessionStorage.getItem('bl_session') || 'null');
+  if (!token || !session) { location.replace('login.html'); }
+
+  async function api(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action: action, token: token }, payload || {}))
+    });
+    return res.json();
+  }
+  const $ = function (id) { return document.getElementById(id); };
+  const isAdmin = session && session.role === 'admin';
+
+  const NAV = [
+    { h: 'dashboard.html', l: 'แดชบอร์ด' }, { h: 'scan.html', l: 'สแกนรับงาน' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย' }, { h: 'review.html', l: 'ตรวจงาน' },
+    { h: 'qrcard.html', l: 'สร้าง QR' }, { h: 'students.html', l: 'นักเรียน' },
+    { h: 'subjects.html', l: 'วิชา' }, { h: 'teachers.html', l: 'ครูผู้สอน', admin: true },
+    { h: 'reports.html', l: 'รายงาน' }, { h: 'settings.html', l: 'ตั้งค่า', admin: true }
+  ];
+  (function renderNav() {
+    const role = (session && session.role) || 'teacher';
+    NAV.forEach(function (it) {
+      if (it.admin && role !== 'admin') return;
+      const a = document.createElement('a'); a.href = it.h; a.textContent = it.l;
+      if (it.h === 'teachers.html') a.className = 'active';
+      $('nav').appendChild(a);
+    });
+  })();
+  if (session) $('userName').textContent = session.name || 'ผู้ใช้';
+
+  $('logoutBtn').addEventListener('click', async function () {
+    try { await api('logout'); } catch (e) {}
+    sessionStorage.removeItem('bl_token'); sessionStorage.removeItem('bl_session');
+    location.replace('login.html');
+  });
+
+  (async function () {
+    try {
+      const c = await api('getConfig');
+      if (c && c.ok) {
+        if (c.schoolName) $('schoolName').textContent = c.schoolName;
+        if (c.logoUrl) { const img = document.createElement('img'); img.src = c.logoUrl; img.alt = ''; $('logo').textContent = ''; $('logo').appendChild(img); }
+      }
+    } catch (e) {}
+  })();
+
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function toast(t) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; setTimeout(function () { el.style.display = 'none'; }, 3500); }
+
+  // เฉพาะ admin เท่านั้น
+  if (!isAdmin) {
+    $('main').innerHTML = '<div class="denied"><div class="ic">🔒</div><h2>เฉพาะผู้ดูแลระบบ</h2><p>หน้าจัดการครูผู้สอนเปิดให้เฉพาะบัญชีผู้ดูแลระบบเท่านั้น</p></div>';
+  } else {
+    $('main').innerHTML =
+      '<div class="top"><div><h1>ครูผู้สอน</h1><div class="sub">เพิ่ม แก้ไข รีเซ็ตรหัสผ่าน และเปิด/ปิดบัญชี</div></div>' +
+      '<button class="btn btn-green" id="newBtn">+ เพิ่มครู</button></div>' +
+      '<div class="panel"><table><thead><tr><th>ชื่อ-สกุล</th><th>username</th><th style="width:110px">บทบาท</th><th style="width:90px">สถานะ</th><th style="width:200px"></th></tr></thead><tbody id="tbody"></tbody></table><div class="empty" id="emptyState">กำลังโหลด...</div></div>';
+    $('newBtn').addEventListener('click', function () { openModal(null); });
+    $('tbody').addEventListener('click', onRowClick);
+    loadTeachers();
+  }
+
+  let teachers = [];
+  async function loadTeachers() {
+    try {
+      const r = await api('listTeachers');
+      if (r && r.ok) { teachers = r.teachers; render(); }
+      else { $('emptyState').textContent = (r && r.error) || 'โหลดข้อมูลไม่สำเร็จ'; }
+    } catch (e) { $('emptyState').textContent = 'โหลดข้อมูลไม่สำเร็จ'; }
+  }
+
+  function render() {
+    const body = $('tbody'); body.innerHTML = '';
+    if (!teachers.length) { $('emptyState').style.display = 'block'; return; }
+    $('emptyState').style.display = 'none';
+    teachers.forEach(function (t) {
+      const tr = document.createElement('tr');
+      const roleP = t.role === 'admin' ? '<span class="pill p-admin">ผู้ดูแล</span>' : '<span class="pill p-on">ครูผู้สอน</span>';
+      const statP = t.status === 'active' ? '<span class="pill p-on">ใช้งาน</span>' : '<span class="pill p-off">ปิด</span>';
+      const toggleLabel = t.status === 'active' ? 'ปิดบัญชี' : 'เปิดบัญชี';
+      const toggleStatus = t.status === 'active' ? 'inactive' : 'active';
+      tr.innerHTML =
+        '<td>' + escapeHtml(t.name) + '</td><td>' + escapeHtml(t.username) + '</td><td>' + roleP + '</td><td>' + statP + '</td>' +
+        '<td><div class="rowact">' +
+          '<button class="mini mini-out" data-edit="' + escapeHtml(t.teacherId) + '">แก้ไข</button>' +
+          '<button class="mini mini-y" data-reset="' + escapeHtml(t.teacherId) + '">รีเซ็ตรหัส</button>' +
+          '<button class="mini mini-grey" data-toggle="' + escapeHtml(t.teacherId) + '" data-status="' + toggleStatus + '">' + toggleLabel + '</button>' +
+        '</div></td>';
+      tr._data = t;
+      body.appendChild(tr);
+    });
+  }
+
+  async function onRowClick(e) {
+    const ed = e.target.closest('button[data-edit]');
+    const rs = e.target.closest('button[data-reset]');
+    const tg = e.target.closest('button[data-toggle]');
+    if (ed) { openModal(ed.closest('tr')._data); return; }
+    if (rs) {
+      const t = rs.closest('tr')._data;
+      if (!confirm('รีเซ็ตรหัสผ่านของ ' + t.name + ' ?')) return;
+      rs.disabled = true;
+      try { const r = await api('resetPassword', { teacherId: rs.getAttribute('data-reset') }); if (r && r.ok) toast('รีเซ็ตแล้ว รหัสผ่านใหม่: ' + r.tempPassword); }
+      catch (err) {}
+      rs.disabled = false; return;
+    }
+    if (tg) {
+      tg.disabled = true;
+      try { const r = await api('setTeacherStatus', { teacherId: tg.getAttribute('data-toggle'), status: tg.getAttribute('data-status') }); if (r && r.ok) loadTeachers(); else tg.disabled = false; }
+      catch (err) { tg.disabled = false; }
+    }
+  }
+
+  // ---- Modal ----
+  let editingId = null;
+  function openModal(t) {
+    $('modalErr').style.display = 'none';
+    if (t) {
+      editingId = t.teacherId; $('modalTitle').textContent = 'แก้ไขครู';
+      $('name').value = t.name || ''; $('username').value = t.username || ''; $('roleSel').value = t.role || 'teacher';
+      $('password').value = ''; $('pwHint').textContent = 'เว้นว่างไว้เพื่อคงรหัสผ่านเดิม';
+    } else {
+      editingId = null; $('modalTitle').textContent = 'เพิ่มครู';
+      $('name').value = ''; $('username').value = ''; $('roleSel').value = 'teacher';
+      $('password').value = ''; $('pwHint').textContent = 'เว้นว่างจะตั้งเป็น 123456 ให้เปลี่ยนภายหลัง';
+    }
+    $('overlay').classList.add('show');
+  }
+  function closeModal() { $('overlay').classList.remove('show'); }
+  $('cancelBtn').addEventListener('click', closeModal);
+  $('overlay').addEventListener('click', function (e) { if (e.target === $('overlay')) closeModal(); });
+
+  $('saveBtn').addEventListener('click', async function () {
+    const name = $('name').value.trim(), username = $('username').value.trim();
+    if (!name || !username) { $('modalErr').textContent = 'กรอกชื่อและ username ให้ครบ'; $('modalErr').style.display = 'block'; return; }
+    const teacher = { teacherId: editingId || undefined, name: name, username: username, role: $('roleSel').value };
+    const pw = $('password').value.trim();
+    if (pw) teacher.password = pw;
+    $('saveBtn').disabled = true;
+    try {
+      const r = await api('saveTeacher', { teacher: teacher });
+      if (r && r.ok) { closeModal(); loadTeachers(); } else { $('modalErr').textContent = (r && r.error) || 'บันทึกไม่สำเร็จ'; $('modalErr').style.display = 'block'; }
+    } catch (e) { $('modalErr').textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'; $('modalErr').style.display = 'block'; }
+    $('saveBtn').disabled = false;
+  });
+</script>
+</body>
+</html>

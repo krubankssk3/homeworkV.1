@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตั้งค่า · ระบบส่งงานบ้านละลม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#5E9A2D;--green-d:#2F5511;--green-l:#EFF4E4;--yellow:#F7C948;--yellow-d:#6B4D06;--bg:#F4F8EC;--ink:#33421C;--muted:#6E7B56;--line:#D2DEBC;--white:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--green);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+  .brand .lg{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px;font-weight:700;flex:none}
+  .brand .lg img{width:100%;height:100%;object-fit:contain}
+  .user{display:flex;align-items:center;gap:9px;font-size:13px}
+  .btn-logout{background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;cursor:pointer}
+  .btn-logout:hover{background:rgba(255,255,255,.28)}
+  nav.nav{background:#fff;border-bottom:0.5px solid var(--line);display:flex;gap:2px;padding:0 10px;overflow-x:auto;white-space:nowrap}
+  nav.nav a{padding:12px 13px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.nav a:hover{color:var(--green-d)} nav.nav a.active{color:var(--green-d);font-weight:600;border-bottom-color:var(--green)}
+  main{flex:1;width:100%;max-width:720px;margin:0 auto;padding:16px}
+  h1{font-size:19px;font-weight:600;color:var(--green-d)} .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .card{background:#fff;border:0.5px solid var(--line);border-radius:14px;padding:18px;margin-top:14px}
+  .card h2{font-size:15px;font-weight:600;color:var(--green-d);margin-bottom:4px}
+  .card .desc{font-size:12px;color:var(--muted);margin-bottom:6px}
+  label{display:block;font-size:13px;color:#3F5226;margin:12px 0 5px}
+  input,select{width:100%;border:0.5px solid #CBD9B0;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff;height:42px}
+  input:focus,select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:480px){.two{grid-template-columns:1fr}}
+  .hint{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.6}
+  .btn{border:none;border-radius:9px;padding:11px 16px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:filter .15s,transform .05s}
+  .btn:active{transform:scale(.99)} .btn:hover{filter:brightness(1.05)}
+  .btn-green{background:var(--green);color:#fff} .btn-outline{background:#fff;color:var(--green-d);border:0.5px solid #BFD49A}
+  .btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
+  .save-bar{display:flex;gap:10px;align-items:center;margin-top:16px}
+  .denied{max-width:420px;margin:60px auto;text-align:center;background:#fff;border:0.5px solid var(--line);border-radius:16px;padding:34px 26px}
+  .denied .ic{font-size:40px} .denied h2{font-size:18px;color:var(--green-d);margin-top:8px} .denied p{font-size:14px;color:var(--muted);margin-top:6px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--green-d);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;display:none;z-index:30;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
+  .switch{display:flex;align-items:center;gap:10px;margin-top:6px}
+  .switch select{width:auto;min-width:130px}
+  footer{margin-top:18px;padding:14px 16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--green-d);font-weight:600}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">บ้านละลม</span></div>
+    <div class="user"><span id="userName">—</span><button class="btn-logout" id="logoutBtn">ออกจากระบบ</button></div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+
+  <main id="main"></main>
+
+  <footer>ผู้พัฒนา: <b>นายชิติพัทธ์ นิลวรรณ</b><br>ครูโรงเรียนบ้านละลม สพป.ศรีสะเกษ เขต 3</footer>
+  <div class="toast" id="toast"></div>
+
+<script>
+  // ====== วาง URL /exec ของ Web App ที่ deploy จาก Code.gs ตรงนี้ ======
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCTrn5F2tZ-UJiBazA1PA2np5Lwwhy_TYYie7liGg9LFIcaavqF78PLiPqaC3TwyXt/exec';
+
+  const token = sessionStorage.getItem('bl_token');
+  const session = JSON.parse(sessionStorage.getItem('bl_session') || 'null');
+  if (!token || !session) { location.replace('login.html'); }
+
+  async function api(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action: action, token: token }, payload || {}))
+    });
+    return res.json();
+  }
+  const $ = function (id) { return document.getElementById(id); };
+  const isAdmin = session && session.role === 'admin';
+  function toast(t) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; setTimeout(function () { el.style.display = 'none'; }, 3000); }
+
+  const NAV = [
+    { h: 'dashboard.html', l: 'แดชบอร์ด' }, { h: 'scan.html', l: 'สแกนรับงาน' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย' }, { h: 'review.html', l: 'ตรวจงาน' },
+    { h: 'qrcard.html', l: 'สร้าง QR' }, { h: 'students.html', l: 'นักเรียน' },
+    { h: 'subjects.html', l: 'วิชา' }, { h: 'teachers.html', l: 'ครูผู้สอน', admin: true },
+    { h: 'reports.html', l: 'รายงาน' }, { h: 'settings.html', l: 'ตั้งค่า', admin: true }
+  ];
+  (function renderNav() {
+    const role = (session && session.role) || 'teacher';
+    NAV.forEach(function (it) {
+      if (it.admin && role !== 'admin') return;
+      const a = document.createElement('a'); a.href = it.h; a.textContent = it.l;
+      if (it.h === 'settings.html') a.className = 'active';
+      $('nav').appendChild(a);
+    });
+  })();
+  if (session) $('userName').textContent = session.name || 'ผู้ใช้';
+
+  $('logoutBtn').addEventListener('click', async function () {
+    try { await api('logout'); } catch (e) {}
+    sessionStorage.removeItem('bl_token'); sessionStorage.removeItem('bl_session');
+    location.replace('login.html');
+  });
+
+  (async function () {
+    try {
+      const c = await api('getConfig');
+      if (c && c.ok) {
+        if (c.schoolName) $('schoolName').textContent = c.schoolName;
+        if (c.logoUrl) { const img = document.createElement('img'); img.src = c.logoUrl; img.alt = ''; $('logo').textContent = ''; $('logo').appendChild(img); }
+      }
+    } catch (e) {}
+  })();
+
+  if (!isAdmin) {
+    $('main').innerHTML = '<div class="denied"><div class="ic">🔒</div><h2>เฉพาะผู้ดูแลระบบ</h2><p>หน้าตั้งค่าระบบเปิดให้เฉพาะบัญชีผู้ดูแลระบบเท่านั้น</p></div>';
+  } else {
+    $('main').innerHTML =
+      '<h1>ตั้งค่าระบบ</h1><div class="sub">กำหนดข้อมูลโรงเรียน ปีการศึกษา และการแจ้งเตือน LINE</div>' +
+      '<div class="card"><h2>ข้อมูลโรงเรียน</h2>' +
+        '<label>ชื่อโรงเรียน</label><input id="schoolNameInp" type="text">' +
+        '<label>URL โลโก้</label><input id="logoUrlInp" type="text" placeholder="https://...">' +
+        '<div class="hint">ชื่อและโลโก้นี้จะแสดงบนทุกหน้าและบนบัตร QR</div>' +
+      '</div>' +
+      '<div class="card"><h2>ปีการศึกษาและการส่งงาน</h2>' +
+        '<div class="two"><div><label>ปีการศึกษาปัจจุบัน</label><input id="currentYearInp" type="text" placeholder="2569"></div>' +
+        '<div><label>ภาคเรียน</label><select id="currentTermInp"><option value="1">1</option><option value="2">2</option></select></div></div>' +
+        '<label>เวลานัดส่งเริ่มต้น</label><input id="defaultDueTimeInp" type="time">' +
+        '<div class="hint">เวลานี้จะถูกเติมให้อัตโนมัติเมื่อสร้างงานใหม่</div>' +
+      '</div>' +
+      '<div class="card"><h2>การแจ้งเตือน LINE</h2>' +
+        '<div class="desc">แจ้งผู้ปกครองเมื่อนักเรียนส่งงาน และเตือนงานค้างส่งอัตโนมัติ</div>' +
+        '<label>เปิดใช้การแจ้งเตือน</label><div class="switch"><select id="lineEnabledInp"><option value="true">เปิด</option><option value="false">ปิด</option></select></div>' +
+        '<label>LINE Channel Access Token</label><input id="lineTokenInp" type="text" placeholder="เว้นว่างไว้เพื่อคงค่าเดิม">' +
+        '<div class="hint">ใส่ Token จาก LINE Developers Console · ระบบจะไม่แสดง Token เดิมเพื่อความปลอดภัย</div>' +
+        '<label>ลิงก์เพิ่มเพื่อน LINE OA (สำหรับหน้าผูกผู้ปกครอง)</label><input id="lineAddFriendUrlInp" type="text" placeholder="https://lin.ee/...">' +
+        '<label>เปิดให้ผู้ปกครองค้นหารหัสนักเรียน (หน้า parent.html)</label><div class="switch"><select id="parentLookupEnabledInp"><option value="false">ปิด (แนะนำ)</option><option value="true">เปิด</option></select></div>' +
+        '<div class="hint">หากเปิด ใครก็ค้นชื่อเพื่อดูรหัสนักเรียนได้ผ่านหน้าสาธารณะ — เปิดเฉพาะเมื่อจำเป็น</div>' +
+        '<div class="save-bar"><button class="btn btn-outline" id="reminderBtn">ตั้งการเตือนงานค้างอัตโนมัติ</button></div>' +
+      '</div>' +
+      '<div class="save-bar"><button class="btn btn-green" id="saveBtn">บันทึกการตั้งค่าทั้งหมด</button></div>';
+
+    $('saveBtn').addEventListener('click', saveAll);
+    $('reminderBtn').addEventListener('click', installReminder);
+    loadSettings();
+  }
+
+  const KEYS = ['schoolName', 'logoUrl', 'currentYear', 'currentTerm', 'defaultDueTime', 'lineEnabled', 'lineToken', 'lineAddFriendUrl', 'parentLookupEnabled'];
+  const FIELD = {
+    schoolName: 'schoolNameInp', logoUrl: 'logoUrlInp', currentYear: 'currentYearInp',
+    currentTerm: 'currentTermInp', defaultDueTime: 'defaultDueTimeInp',
+    lineEnabled: 'lineEnabledInp', lineToken: 'lineTokenInp', lineAddFriendUrl: 'lineAddFriendUrlInp', parentLookupEnabled: 'parentLookupEnabledInp'
+  };
+
+  async function loadSettings() {
+    try {
+      const r = await api('getSettings');
+      if (!r || !r.ok) { toast((r && r.error) || 'โหลดค่าตั้งไม่สำเร็จ'); return; }
+      const map = {};
+      r.settings.forEach(function (s) { map[s.key] = s.value; });
+      KEYS.forEach(function (k) {
+        const el = $(FIELD[k]); if (!el) return;
+        if (k === 'lineToken') { el.value = ''; el.placeholder = map[k] ? 'มี Token อยู่แล้ว (เว้นว่างเพื่อคงค่าเดิม)' : 'ยังไม่ได้ตั้ง Token'; return; }
+        if (el.tagName === 'SELECT') { el.value = (map[k] != null ? String(map[k]) : el.value); }
+        else { el.value = map[k] != null ? map[k] : ''; }
+      });
+    } catch (e) { toast('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); }
+  }
+
+  async function saveAll() {
+    const settings = {};
+    KEYS.forEach(function (k) {
+      const el = $(FIELD[k]); if (!el) return;
+      if (k === 'lineToken') { const v = el.value.trim(); if (v) settings[k] = v; return; } // ส่งเฉพาะเมื่อกรอกใหม่
+      settings[k] = el.value;
+    });
+    $('saveBtn').disabled = true; $('saveBtn').textContent = 'กำลังบันทึก...';
+    try {
+      const r = await api('saveSettings', { settings: settings });
+      if (r && r.ok) { toast('บันทึกการตั้งค่าแล้ว'); loadSettings(); } else { toast((r && r.error) || 'บันทึกไม่สำเร็จ'); }
+    } catch (e) { toast('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); }
+    $('saveBtn').disabled = false; $('saveBtn').textContent = 'บันทึกการตั้งค่าทั้งหมด';
+  }
+
+  async function installReminder() {
+    $('reminderBtn').disabled = true;
+    try {
+      const r = await api('installReminder');
+      toast(r && r.ok ? (r.message || 'ตั้งการเตือนแล้ว') : ((r && r.error) || 'ตั้งไม่สำเร็จ'));
+    } catch (e) { toast('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); }
+    $('reminderBtn').disabled = false;
+  }
+</script>
+</body>
+</html>

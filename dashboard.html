@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายงานการส่งงาน · ระบบส่งงานบ้านละลม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{--green:#5E9A2D;--green-d:#2F5511;--green-l:#EFF4E4;--yellow:#F7C948;--yellow-d:#6B4D06;--grey:#B4B2A9;--bg:#F4F8EC;--ink:#33421C;--muted:#6E7B56;--line:#D2DEBC;--white:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--green);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:11px;font-size:17px;font-weight:600}
+  .brand .lg{width:36px;height:36px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:16px;font-weight:700;flex:none}
+  .brand .lg img{width:100%;height:100%;object-fit:contain}
+  .btn-login{background:var(--yellow);color:var(--yellow-d);border:none;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .btn-login:hover{filter:brightness(1.05)}
+  main{flex:1;width:100%;max-width:1000px;margin:0 auto;padding:18px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  h1{font-size:21px;font-weight:600;color:var(--green-d)} .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .datebox{display:flex;align-items:center;gap:8px}
+  input[type=date]{height:42px;border:0.5px solid #CBD9B0;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+  input[type=date]:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+  @media(max-width:640px){.grid4{grid-template-columns:repeat(2,1fr)}}
+  .metric{background:#fff;border:0.5px solid var(--line);border-radius:12px;padding:14px 16px}
+  .metric .lab{font-size:12px;color:var(--muted)} .metric .num{font-size:26px;font-weight:600;color:var(--green-d);margin-top:3px}
+  .card{background:#fff;border:0.5px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px}
+  .ctitle{font-size:14px;font-weight:600;color:var(--green-d);margin-bottom:12px}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:720px){.charts{grid-template-columns:1fr}}
+  .chartwrap{position:relative;height:230px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:13px}
+  .lg-item{display:flex;align-items:center;gap:7px;color:var(--muted)} .sw{width:11px;height:11px;border-radius:3px}
+  .arow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid #EDF1E2}
+  .arow:last-child{border-bottom:none}
+  .arow .info{flex:1;min-width:0}
+  .arow .t{font-size:14px;color:var(--ink)} .arow .track{height:8px;border-radius:5px;background:#EAEFE0;overflow:hidden;margin-top:7px}
+  .arow .fill{height:100%;background:var(--green);border-radius:5px;transition:width .5s ease}
+  .arow .n{font-size:13px;color:var(--muted);width:88px;text-align:right;flex:none}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:24px 10px}
+  .loading{color:var(--muted);font-size:14px;text-align:center;padding:40px 10px}
+  footer{margin-top:20px;padding:16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--green-d);font-weight:600}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">ระบบส่งงาน · บ้านละลม</span></div>
+    <a class="btn-login" href="login.html">เข้าสู่ระบบ</a>
+  </header>
+
+  <main>
+    <div class="top">
+      <div><h1>รายงานการส่งงานรายวัน</h1><div class="sub" id="dateSub">ภาพรวมของวันนี้</div></div>
+      <div class="datebox"><span class="sub">วันที่:</span><input type="date" id="datePick"></div>
+    </div>
+
+    <div id="content">
+      <div class="loading" id="loading">กำลังโหลดข้อมูล...</div>
+    </div>
+  </main>
+
+  <footer>ผู้พัฒนา: <b>นายชิติพัทธ์ นิลวรรณ</b><br>ครูโรงเรียนบ้านละลม สพป.ศรีสะเกษ เขต 3</footer>
+
+<script>
+  // ====== วาง URL /exec ของ Web App ที่ deploy จาก Code.gs ตรงนี้ ======
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCTrn5F2tZ-UJiBazA1PA2np5Lwwhy_TYYie7liGg9LFIcaavqF78PLiPqaC3TwyXt/exec';
+
+  async function api(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+    });
+    return res.json();
+  }
+  const $ = function (id) { return document.getElementById(id); };
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  (async function () {
+    try {
+      const c = await api('getConfig');
+      if (c && c.ok) {
+        if (c.schoolName) $('schoolName').textContent = 'ระบบส่งงาน · ' + c.schoolName;
+        if (c.logoUrl) { const img = document.createElement('img'); img.src = c.logoUrl; img.alt = ''; $('logo').textContent = ''; $('logo').appendChild(img); }
+      }
+    } catch (e) {}
+  })();
+
+  function todayStr() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  let donutChart = null, barChart = null;
+
+  $('datePick').value = todayStr();
+  $('datePick').addEventListener('change', function () { load(this.value); });
+
+  load(todayStr());
+
+  async function load(dateStr) {
+    $('content').innerHTML = '<div class="loading">กำลังโหลดข้อมูล...</div>';
+    try {
+      const r = await api('getPublicDashboard', { date: dateStr });
+      if (!r || !r.ok) { $('content').innerHTML = '<div class="empty">ไม่สามารถโหลดข้อมูลได้</div>'; return; }
+      renderDashboard(r);
+    } catch (e) {
+      $('content').innerHTML = '<div class="empty">เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบ API_URL</div>';
+    }
+  }
+
+  function renderDashboard(d) {
+    const s = d.summary || { submitted: 0, late: 0, pending: 0, total: 0, rate: 0 };
+    const onTime = Math.max(0, s.submitted - s.late);
+    const isToday = d.date === todayStr();
+    $('dateSub').textContent = isToday ? 'ภาพรวมของวันนี้' : 'ภาพรวมของวันที่ ' + d.date;
+
+    $('content').innerHTML =
+      '<div class="grid4">' +
+        metric('ส่งตรงเวลา', onTime, 'var(--green-d)') +
+        metric('ส่งสาย', s.late, 'var(--yellow-d)') +
+        metric('ยังไม่ส่ง', s.pending, '#5F5E5A') +
+        metric('อัตราการส่ง', s.rate + '%', 'var(--green-d)') +
+      '</div>' +
+      '<div class="card"><div class="ctitle">สถิติการส่งงาน</div>' +
+        '<div class="charts">' +
+          '<div><div class="chartwrap"><canvas id="donut"></canvas></div>' +
+            '<div class="legend">' +
+              legend('var(--green)', 'ส่งตรงเวลา · ' + onTime) +
+              legend('var(--yellow)', 'ส่งสาย · ' + s.late) +
+              legend('var(--grey)', 'ยังไม่ส่ง · ' + s.pending) +
+            '</div></div>' +
+          '<div><div class="sub" style="margin-bottom:6px">อัตราการส่ง 5 วันล่าสุด (%)</div><div class="chartwrap"><canvas id="bar"></canvas></div></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card"><div class="ctitle">งานที่ครบกำหนด' + (isToday ? 'วันนี้' : 'วันที่ ' + d.date) + '</div><div id="alist"></div></div>';
+
+    renderAssignments(d.assignments || []);
+    drawDonut(onTime, s.late, s.pending);
+    drawBar(d.trend || []);
+  }
+
+  function metric(lab, num, color) {
+    return '<div class="metric"><div class="lab">' + lab + '</div><div class="num" style="color:' + color + '">' + num + '</div></div>';
+  }
+  function legend(color, text) { return '<span class="lg-item"><span class="sw" style="background:' + color + '"></span>' + escapeHtml(text) + '</span>'; }
+
+  function renderAssignments(list) {
+    const box = $('alist');
+    if (!list.length) { box.innerHTML = '<div class="empty">ไม่มีงานที่ครบกำหนดในวันนี้</div>'; return; }
+    box.innerHTML = '';
+    list.forEach(function (a) {
+      const div = document.createElement('div'); div.className = 'arow';
+      div.innerHTML =
+        '<div class="info"><div class="t">' + escapeHtml(a.subjectName) + ' ' + escapeHtml(a.roomLabel) + ' · ' + escapeHtml(a.title) + '</div>' +
+        '<div class="track"><div class="fill" style="width:' + a.percent + '%"></div></div></div>' +
+        '<div class="n">' + a.submitted + '/' + a.expected + ' คน</div>';
+      box.appendChild(div);
+    });
+  }
+
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  function drawDonut(onTime, late, pending) {
+    if (typeof Chart === 'undefined') return;
+    const ctx = $('donut'); if (!ctx) return;
+    if (donutChart) donutChart.destroy();
+    const total = onTime + late + pending;
+    donutChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['ส่งตรงเวลา', 'ส่งสาย', 'ยังไม่ส่ง'],
+        datasets: [{ data: [onTime, late, pending], backgroundColor: [cssVar('--green'), cssVar('--yellow'), cssVar('--grey')], borderWidth: 2, borderColor: '#fff' }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '64%',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function (c) { const pct = total ? Math.round(c.parsed / total * 100) : 0; return c.label + ': ' + c.parsed + ' คน (' + pct + '%)'; } } }
+        }
+      }
+    });
+  }
+
+  function drawBar(trend) {
+    if (typeof Chart === 'undefined') return;
+    const ctx = $('bar'); if (!ctx) return;
+    if (barChart) barChart.destroy();
+    barChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: trend.map(function (t) { return t.label; }),
+        datasets: [{ data: trend.map(function (t) { return t.percent; }), backgroundColor: cssVar('--green'), borderRadius: 6, maxBarThickness: 38 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function (v) { return v + '%'; } }, grid: { color: '#EDF1E2' } }, x: { grid: { display: false } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return c.parsed.y + '%'; } } } }
+      }
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตรวจงาน · ระบบส่งงานบ้านละลม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#5E9A2D;--green-d:#2F5511;--green-l:#EFF4E4;--yellow:#F7C948;--yellow-d:#6B4D06;--bg:#F4F8EC;--ink:#33421C;--muted:#6E7B56;--line:#D2DEBC;--white:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--green);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+  .brand .lg{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px;font-weight:700;flex:none}
+  .brand .lg img{width:100%;height:100%;object-fit:contain}
+  .user{display:flex;align-items:center;gap:9px;font-size:13px}
+  .btn-logout{background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;cursor:pointer}
+  .btn-logout:hover{background:rgba(255,255,255,.28)}
+  nav.nav{background:#fff;border-bottom:0.5px solid var(--line);display:flex;gap:2px;padding:0 10px;overflow-x:auto;white-space:nowrap}
+  nav.nav a{padding:12px 13px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.nav a:hover{color:var(--green-d)} nav.nav a.active{color:var(--green-d);font-weight:600;border-bottom-color:var(--green)}
+  main{flex:1;width:100%;max-width:920px;margin:0 auto;padding:16px}
+  h1{font-size:19px;font-weight:600;color:var(--green-d)}
+  .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .selrow{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  select{flex:1;min-width:200px;height:44px;border:0.5px solid #CBD9B0;border-radius:10px;padding:0 12px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+  select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .summary{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .chip{background:#fff;border:0.5px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--muted)}
+  .chip b{display:block;font-size:18px;color:var(--green-d);font-weight:600}
+  .panel{background:#fff;border:0.5px solid var(--line);border-radius:14px;margin-top:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:0.5px solid #EDF1E2}
+  th{color:var(--muted);font-weight:600;font-size:12px;background:#FAFCF4}
+  tr:last-child td{border-bottom:none}
+  .pill{font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+  .p-ok{background:#DCEFC4;color:var(--green-d)} .p-late{background:#FBE6BD;color:var(--yellow-d)} .p-no{background:#E8E8DF;color:#5F5E5A} .p-ck{background:#CFE8AE;color:var(--green-d)}
+  .chk{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:var(--green-d);user-select:none}
+  .chk input{width:18px;height:18px;accent-color:var(--green);cursor:pointer}
+  .muted-row td{color:#9AA383}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px}
+  .note{display:flex;gap:9px;align-items:center;background:#FBE9C2;color:var(--yellow-d);border-radius:9px;padding:10px 12px;font-size:13px;margin-top:14px}
+  footer{margin-top:18px;padding:14px 16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--green-d);font-weight:600}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">บ้านละลม</span></div>
+    <div class="user"><span id="userName">—</span><button class="btn-logout" id="logoutBtn">ออกจากระบบ</button></div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+
+  <main>
+    <h1>ตรวจงาน</h1>
+    <div class="sub">เลือกวิชาและงาน แล้วติ๊ก "ตรวจแล้ว" สำหรับงานที่ตรวจเสร็จ</div>
+
+    <div class="selrow">
+      <select id="subjectSel"><option value="">— เลือกวิชา —</option></select>
+      <select id="assignmentSel"><option value="">— เลือกงาน —</option></select>
+    </div>
+    <div class="note" id="noSubjectNote" style="display:none"><span>⚠️</span><span>ยังไม่มีวิชาที่คุณรับผิดชอบ กรุณาให้ผู้ดูแลเพิ่มวิชาให้ก่อน</span></div>
+
+    <div class="summary" id="summary" style="display:none"></div>
+
+    <div class="panel" id="panel" style="display:none">
+      <table>
+        <thead><tr><th style="width:64px">เลขที่</th><th>ชื่อ-สกุล</th><th style="width:120px">การส่ง</th><th style="width:130px">ตรวจแล้ว</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="emptyState">เลือกวิชาและงานเพื่อเริ่มตรวจ</div>
+  </main>
+
+  <footer>ผู้พัฒนา: <b>นายชิติพัทธ์ นิลวรรณ</b><br>ครูโรงเรียนบ้านละลม สพป.ศรีสะเกษ เขต 3</footer>
+
+<script>
+  // ====== วาง URL /exec ของ Web App ที่ deploy จาก Code.gs ตรงนี้ ======
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCTrn5F2tZ-UJiBazA1PA2np5Lwwhy_TYYie7liGg9LFIcaavqF78PLiPqaC3TwyXt/exec';
+
+  const token = sessionStorage.getItem('bl_token');
+  const session = JSON.parse(sessionStorage.getItem('bl_session') || 'null');
+  if (!token || !session) { location.replace('login.html'); }
+
+  async function api(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action: action, token: token }, payload || {}))
+    });
+    return res.json();
+  }
+  const $ = function (id) { return document.getElementById(id); };
+
+  const NAV = [
+    { h: 'dashboard.html', l: 'แดชบอร์ด' }, { h: 'scan.html', l: 'สแกนรับงาน' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย' }, { h: 'review.html', l: 'ตรวจงาน' },
+    { h: 'qrcard.html', l: 'สร้าง QR' }, { h: 'students.html', l: 'นักเรียน' },
+    { h: 'subjects.html', l: 'วิชา' }, { h: 'teachers.html', l: 'ครูผู้สอน', admin: true },
+    { h: 'reports.html', l: 'รายงาน' }, { h: 'settings.html', l: 'ตั้งค่า', admin: true }
+  ];
+  function renderNav(active) {
+    const role = (session && session.role) || 'teacher';
+    NAV.forEach(function (it) {
+      if (it.admin && role !== 'admin') return;
+      const a = document.createElement('a');
+      a.href = it.h; a.textContent = it.l;
+      if (it.h === active) a.className = 'active';
+      $('nav').appendChild(a);
+    });
+  }
+  renderNav('review.html');
+  if (session) $('userName').textContent = session.name || 'ผู้ใช้';
+
+  $('logoutBtn').addEventListener('click', async function () {
+    try { await api('logout'); } catch (e) {}
+    sessionStorage.removeItem('bl_token'); sessionStorage.removeItem('bl_session');
+    location.replace('login.html');
+  });
+
+  (async function () {
+    try {
+      const c = await api('getConfig');
+      if (c && c.ok) {
+        if (c.schoolName) $('schoolName').textContent = c.schoolName;
+        if (c.logoUrl) { const img = document.createElement('img'); img.src = c.logoUrl; img.alt = ''; $('logo').textContent = ''; $('logo').appendChild(img); }
+      }
+    } catch (e) {}
+  })();
+
+  (async function loadSubjects() {
+    try {
+      const r = await api('listSubjects');
+      if (r && r.ok && r.subjects.length) {
+        r.subjects.forEach(function (s) {
+          const o = document.createElement('option');
+          o.value = s.subjectId; o.textContent = s.name + ' · ' + s.roomLabel;
+          $('subjectSel').appendChild(o);
+        });
+      } else { $('noSubjectNote').style.display = 'flex'; }
+    } catch (e) { $('noSubjectNote').style.display = 'flex'; }
+  })();
+
+  $('subjectSel').addEventListener('change', async function () {
+    const sel = $('assignmentSel');
+    sel.innerHTML = '<option value="">— เลือกงาน —</option>';
+    resetView();
+    if (!this.value) return;
+    try {
+      const r = await api('listAssignments', { filters: { subjectId: this.value } });
+      if (r && r.ok) {
+        r.assignments.forEach(function (a) {
+          const o = document.createElement('option');
+          o.value = a.assignmentId; o.textContent = a.title + ' · ครบกำหนด ' + String(a.dueDate).replace('T', ' ');
+          sel.appendChild(o);
+        });
+      }
+    } catch (e) {}
+  });
+
+  $('assignmentSel').addEventListener('change', function () {
+    if (this.value) loadRoster(this.value); else resetView();
+  });
+
+  function resetView() {
+    $('panel').style.display = 'none';
+    $('summary').style.display = 'none';
+    $('emptyState').style.display = 'block';
+  }
+
+  async function loadRoster(assignmentId) {
+    try {
+      const r = await api('getAssignmentRoster', { assignmentId: assignmentId });
+      if (!r || !r.ok) return;
+      $('emptyState').style.display = 'none';
+      $('summary').style.display = 'flex';
+      $('summary').innerHTML =
+        '<div class="chip"><b>' + r.counts.submitted + '</b>ส่งแล้ว</div>' +
+        '<div class="chip"><b>' + r.counts.late + '</b>ส่งสาย</div>' +
+        '<div class="chip"><b>' + r.counts.reviewed + '</b>ตรวจแล้ว</div>' +
+        '<div class="chip"><b>' + r.counts.pending + '</b>ยังไม่ส่ง</div>' +
+        '<div class="chip"><b>' + r.total + '</b>ทั้งหมด</div>';
+      const body = $('tbody'); body.innerHTML = '';
+      r.roster.forEach(function (st) { body.appendChild(renderRow(st)); });
+      $('panel').style.display = 'block';
+    } catch (e) {}
+  }
+
+  function renderRow(st) {
+    const tr = document.createElement('tr');
+    let sub, check;
+    if (st.status === 'ยังไม่ส่ง') {
+      tr.className = 'muted-row';
+      sub = '<span class="pill p-no">ยังไม่ส่ง</span>';
+      check = '<span style="color:#B6BBA6;font-size:13px">—</span>';
+    } else {
+      const reviewed = st.status === 'ตรวจแล้ว';
+      sub = (st.timeliness === 'สาย') ? '<span class="pill p-late">ส่งสาย</span>' : '<span class="pill p-ok">ส่งตรงเวลา</span>';
+      check = '<label class="chk"><input type="checkbox" data-sub="' + st.submissionId + '"' + (reviewed ? ' checked' : '') + '>' + (reviewed ? 'ตรวจแล้ว' : 'ตรวจ') + '</label>';
+    }
+    tr.innerHTML = '<td>' + (st.seatNo || '-') + '</td><td>' + escapeHtml(st.name) + '</td><td>' + sub + '</td><td>' + check + '</td>';
+    return tr;
+  }
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  $('tbody').addEventListener('change', async function (e) {
+    const cb = e.target.closest('input[type="checkbox"][data-sub]');
+    if (!cb) return;
+    const submissionId = cb.getAttribute('data-sub');
+    const reviewed = cb.checked;
+    cb.disabled = true;
+    const labelText = cb.parentNode;
+    try {
+      const r = await api('markReviewed', { submissionId: submissionId, reviewed: reviewed });
+      if (r && r.ok) {
+        labelText.lastChild.textContent = reviewed ? 'ตรวจแล้ว' : 'ตรวจ';
+        if ($('assignmentSel').value) refreshSummaryOnly($('assignmentSel').value);
+      } else { cb.checked = !reviewed; }
+    } catch (err) { cb.checked = !reviewed; }
+    cb.disabled = false;
+  });
+
+  // อัปเดตเฉพาะตัวเลขสรุป โดยไม่รีโหลดทั้งตาราง (กันการกระพริบ)
+  async function refreshSummaryOnly(assignmentId) {
+    try {
+      const r = await api('getAssignmentRoster', { assignmentId: assignmentId });
+      if (!r || !r.ok) return;
+      $('summary').innerHTML =
+        '<div class="chip"><b>' + r.counts.submitted + '</b>ส่งแล้ว</div>' +
+        '<div class="chip"><b>' + r.counts.late + '</b>ส่งสาย</div>' +
+        '<div class="chip"><b>' + r.counts.reviewed + '</b>ตรวจแล้ว</div>' +
+        '<div class="chip"><b>' + r.counts.pending + '</b>ยังไม่ส่ง</div>' +
+        '<div class="chip"><b>' + r.total + '</b>ทั้งหมด</div>';
+    } catch (e) {}
+  }
+</script>
+</body>
+</html>
