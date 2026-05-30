@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบส่งงาน · โรงเรียนบ้านละลม</title>
+<meta http-equiv="refresh" content="0; url=dashboard.html">
+<link rel="canonical" href="dashboard.html">
+<style>
+  body{font-family:system-ui,'Segoe UI',sans-serif;background:#F4F8EC;color:#2F5511;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0}
+  .box{text-align:center}
+  .spin{width:34px;height:34px;border:3px solid #C7D3AC;border-top-color:#5E9A2D;border-radius:50%;
+    margin:0 auto 14px;animation:s .7s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+  a{color:#5E9A2D}
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="spin"></div>
+    <div>กำลังเข้าสู่ระบบส่งงาน...</div>
+    <div style="margin-top:8px;font-size:14px">หากไม่เปลี่ยนหน้าอัตโนมัติ <a href="dashboard.html">คลิกที่นี่</a></div>
+  </div>
+  <script>location.replace('dashboard.html');</script>
+</body>
+</html>
