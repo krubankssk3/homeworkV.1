@@ -15,10 +15,11 @@
   .brand .lg{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px;font-weight:700;flex:none}
   .brand .lg img{width:100%;height:100%;object-fit:contain}
   .user{display:flex;align-items:center;gap:9px;font-size:13px}
-  .btn-logout{background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;cursor:pointer}
+  .btn-logout{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;cursor:pointer}
   .btn-logout:hover{background:rgba(255,255,255,.28)}
   nav.nav{background:#fff;border-bottom:0.5px solid var(--line);display:flex;gap:2px;padding:0 10px;overflow-x:auto;white-space:nowrap}
-  nav.nav a{padding:12px 13px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.nav a{display:inline-flex;align-items:center;gap:6px;padding:12px 13px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.nav a i{font-size:16px}
   nav.nav a:hover{color:var(--green-d)}
   nav.nav a.active{color:var(--green-d);font-weight:600;border-bottom-color:var(--green)}
   main{flex:1;width:100%;max-width:980px;margin:0 auto;padding:16px}
@@ -76,18 +77,19 @@
   @keyframes blfade{from{opacity:0}to{opacity:1}}
   @media(prefers-reduced-motion:reduce){[data-bl-rev]{animation:none!important}}
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.21.0/tabler-icons.min.css">
 </head>
 <body>
   <header>
     <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">บ้านละลม</span></div>
-    <div class="user"><span id="userName">—</span><button class="btn-logout" id="logoutBtn">ออกจากระบบ</button></div>
+    <div class="user"><span id="userName">—</span><button class="btn-logout" id="logoutBtn"><i class="ti ti-logout" aria-hidden="true"></i> ออกจากระบบ</button></div>
   </header>
   <nav class="nav" id="nav"></nav>
 
   <main>
     <div class="top">
       <div><h1>งานที่มอบหมาย</h1><div class="sub">สร้างและจัดการงานในวิชาที่สอน</div></div>
-      <button class="btn btn-green" id="newBtn">+ สร้างงานใหม่</button>
+      <button class="btn btn-green" id="newBtn"><i class="ti ti-plus" aria-hidden="true"></i> สร้างงานใหม่</button>
     </div>
 
     <div class="filterbar">
@@ -149,11 +151,11 @@
 
   // ---- เมนูนำทาง ----
   const NAV = [
-    { h: 'dashboard.html', l: 'แดชบอร์ด' }, { h: 'scan.html', l: 'สแกนรับงาน' },
-    { h: 'assignments.html', l: 'งานที่มอบหมาย' }, { h: 'review.html', l: 'ตรวจงาน' },
-    { h: 'qrcard.html', l: 'สร้าง QR' }, { h: 'students.html', l: 'นักเรียน' },
-    { h: 'subjects.html', l: 'วิชา' }, { h: 'teachers.html', l: 'ครูผู้สอน', admin: true },
-    { h: 'reports.html', l: 'รายงาน' }, { h: 'settings.html', l: 'ตั้งค่า', admin: true }
+    { h: 'dashboard.html', l: 'แดชบอร์ด', i: 'ti-layout-dashboard' }, { h: 'scan.html', l: 'สแกนรับงาน', i: 'ti-qrcode' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย', i: 'ti-clipboard-list' }, { h: 'review.html', l: 'ตรวจงาน', i: 'ti-checkbox' },
+    { h: 'qrcard.html', l: 'สร้าง QR', i: 'ti-id-badge-2' }, { h: 'students.html', l: 'นักเรียน', i: 'ti-user' },
+    { h: 'subjects.html', l: 'วิชา', i: 'ti-book' }, { h: 'teachers.html', l: 'ครูผู้สอน', i: 'ti-users', admin: true },
+    { h: 'reports.html', l: 'รายงาน', i: 'ti-file-text' }, { h: 'settings.html', l: 'ตั้งค่า', i: 'ti-settings', admin: true }
   ];
   function renderNav(active) {
     const role = (session && session.role) || 'teacher';
@@ -161,7 +163,7 @@
     NAV.forEach(function (it) {
       if (it.admin && role !== 'admin') return;
       const a = document.createElement('a');
-      a.href = it.h; a.textContent = it.l;
+      a.href = it.h; a.innerHTML = '<i class="ti ' + it.i + '" aria-hidden="true"></i> ' + it.l;
       if (it.h === active) a.className = 'active';
       nav.appendChild(a);
     });
