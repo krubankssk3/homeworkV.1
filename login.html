@@ -44,6 +44,10 @@
     font-size:15px;font-family:inherit;color:var(--ink);background:#fff;transition:border-color .15s, box-shadow .15s;
   }
   input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .pw-wrap{position:relative}
+  .pw-wrap input{padding-right:46px}
+  .pw-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:19px}
+  .pw-toggle:hover{color:var(--green);background:var(--green-l)}
   .btn{
     width:100%;height:46px;margin-top:20px;border:none;border-radius:10px;
     background:var(--green);color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
@@ -63,6 +67,7 @@
   @keyframes blfade{from{opacity:0}to{opacity:1}}
   @media(prefers-reduced-motion:reduce){[data-bl-rev]{animation:none!important}}
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.21.0/tabler-icons.min.css">
 </head>
 <body>
   <div class="card">
@@ -73,9 +78,12 @@
       <label for="username">ชื่อผู้ใช้</label>
       <input id="username" name="username" type="text" placeholder="กรอกชื่อผู้ใช้" required>
       <label for="password">รหัสผ่าน</label>
-      <input id="password" name="password" type="password" placeholder="กรอกรหัสผ่าน" required>
+      <div class="pw-wrap">
+        <input id="password" name="password" type="password" placeholder="กรอกรหัสผ่าน" required>
+        <button type="button" class="pw-toggle" id="pwToggle" aria-label="แสดงรหัสผ่าน"><i class="ti ti-eye" aria-hidden="true"></i></button>
+      </div>
       <button class="btn" id="submitBtn" type="submit">
-        <span class="spin" id="spin"></span><span id="btnText">เข้าสู่ระบบ</span>
+        <span class="spin" id="spin"></span><i class="ti ti-login-2" id="btnIcon" aria-hidden="true"></i><span id="btnText">เข้าสู่ระบบ</span>
       </button>
       <div class="msg err" id="errMsg"></div>
       <div class="hint">สำหรับครูผู้สอนและผู้ดูแลระบบ · ลืมรหัสผ่านติดต่อผู้ดูแล</div>
@@ -129,6 +137,25 @@
     btnText.textContent = on ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ';
   }
   function showError(text) { errMsg.textContent = text; errMsg.style.display = 'block'; }
+
+  // ปุ่มเปิด-ปิดรหัสผ่าน
+  var pwToggle = document.getElementById('pwToggle');
+  if (pwToggle) {
+    pwToggle.addEventListener('click', function () {
+      var inp = document.getElementById('password');
+      var icon = pwToggle.querySelector('i');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.className = 'ti ti-eye-off';
+        pwToggle.setAttribute('aria-label', 'ซ่อนรหัสผ่าน');
+      } else {
+        inp.type = 'password';
+        icon.className = 'ti ti-eye';
+        pwToggle.setAttribute('aria-label', 'แสดงรหัสผ่าน');
+      }
+      inp.focus();
+    });
+  }
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
