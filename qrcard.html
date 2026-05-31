@@ -33,6 +33,8 @@
   .btn:active{transform:scale(.99)} .btn:hover{filter:brightness(1.05)}
   .btn-green{background:var(--green);color:#fff}
   .btn-yellow{background:var(--yellow);color:var(--yellow-d)}
+  .btn-del{background:#fff;color:#9B2C2C;border:0.5px solid #E3B7B7}
+  .btn-del-all{background:#C0392B;color:#fff}
   .btn-outline{background:#fff;color:var(--green-d);border:0.5px solid #BFD49A}
   .btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
   .chk-regen{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer}
@@ -88,7 +90,9 @@
       <label class="chk-regen"><input type="checkbox" id="regen"> ออก Token ใหม่ (บัตรเก่าใช้ไม่ได้)</label>
       <button class="btn btn-outline" id="selectAllBtn" disabled><i class="ti ti-checkbox" aria-hidden="true"></i> เลือกทั้งหมด</button>
       <button class="btn btn-green" id="genBtn" disabled><i class="ti ti-qrcode" aria-hidden="true"></i> ออกบัตร QR ที่เลือก</button>
-      <button class="btn btn-yellow" id="printBtn" disabled><i class="ti ti-printer" aria-hidden="true"></i> พิมพ์บัตรที่เลือก</button>
+      <button class="btn btn-printer btn-yellow" id="printBtn" disabled><i class="ti ti-printer" aria-hidden="true"></i> พิมพ์บัตรที่เลือก</button>
+      <button class="btn btn-del" id="delBtn" disabled><i class="ti ti-trash" aria-hidden="true"></i> ลบ QR ที่เลือก</button>
+      <button class="btn btn-del-all" id="delAllBtn" disabled><i class="ti ti-trash-x" aria-hidden="true"></i> ลบ QR ทั้งห้อง</button>
     </div>
 
     <div class="cardgrid" id="grid"></div>
@@ -220,6 +224,8 @@
     $('selectAllBtn').disabled = !on;
     $('genBtn').disabled = !on;
     $('printBtn').disabled = !on;
+    $('delBtn').disabled = !on;
+    $('delAllBtn').disabled = !on;
   }
   function getCards() { return Array.prototype.slice.call($('grid').querySelectorAll('.qrcard')); }
   function selectedIds() {
@@ -249,7 +255,7 @@
     const ids = selectedIds();
     if (!ids.length) { return; }
     const regenerate = $('regen').checked;
-    this.disabled = true; this.textContent = 'กำลังออกบัตร...';
+    this.disabled = true; this.innerHTML = '<i class="ti ti-loader-2" aria-hidden="true"></i> กำลังออกบัตร...';
     try {
       const r = await api('generateQrTokens', { studentIds: ids, regenerate: regenerate });
       if (r && r.ok) {
@@ -261,9 +267,42 @@
         });
       }
     } catch (e) {}
-    this.disabled = false; this.textContent = 'ออกบัตร QR ที่เลือก';
+    this.disabled = false; this.innerHTML = '<i class="ti ti-qrcode" aria-hidden="true"></i> ออกบัตร QR ที่เลือก';
     updateCount();
   });
+
+  // ---- ลบ QR ที่เลือก ----
+  $('delBtn').addEventListener('click', async function () {
+    const ids = selectedIds();
+    if (!ids.length) { return; }
+    if (!confirm('ลบ QR ของนักเรียนที่เลือก ' + ids.length + ' คน?\nบัตรเดิมจะสแกนไม่ได้ทันที (ข้อมูลนักเรียนยังอยู่)')) return;
+    await doDelete(ids, this, '<i class="ti ti-trash" aria-hidden="true"></i> ลบ QR ที่เลือก');
+  });
+
+  // ---- ลบ QR ทั้งห้อง ----
+  $('delAllBtn').addEventListener('click', async function () {
+    const ids = roomStudents.map(function (s) { return s.studentId; });
+    if (!ids.length) { return; }
+    if (!confirm('ลบ QR ของนักเรียนทั้งห้องนี้ ' + ids.length + ' คน?\nบัตรเดิมทั้งหมดจะสแกนไม่ได้ทันที (ข้อมูลนักเรียนยังอยู่)')) return;
+    await doDelete(ids, this, '<i class="ti ti-trash-x" aria-hidden="true"></i> ลบ QR ทั้งห้อง');
+  });
+
+  async function doDelete(ids, btn, restoreHtml) {
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2" aria-hidden="true"></i> กำลังลบ...';
+    try {
+      const r = await api('deleteQrTokens', { studentIds: ids });
+      if (r && r.ok) {
+        // ล้าง token ในข้อมูลและเคลียร์ QR บนการ์ด
+        ids.forEach(function (id) {
+          allStudents.forEach(function (s) { if (s.studentId === id) { s.qrToken = ''; s.hasQr = false; } });
+          const el = $('grid').querySelector('.qrcard[data-id="' + cssEscape(id) + '"]');
+          if (el) { const box = el.querySelector('.qrbox'); box.innerHTML = 'ยังไม่มีบัตร'; box.classList.add('empty'); }
+        });
+      }
+    } catch (e) {}
+    btn.disabled = false; btn.innerHTML = restoreHtml;
+    updateCount();
+  }
 
   function cssEscape(s) { return String(s).replace(/["\\]/g, '\\$&'); }
 
