@@ -39,6 +39,13 @@
   .p-ok{background:#DCEFC4;color:var(--green-d)} .p-late{background:#FBE6BD;color:var(--yellow-d)} .p-no{background:#E8E8DF;color:#5F5E5A} .p-ck{background:#CFE8AE;color:var(--green-d)}
   .chk{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:var(--green-d);user-select:none}
   .chk input{width:18px;height:18px;accent-color:var(--green);cursor:pointer}
+  .score-wrap{display:inline-flex;align-items:center;gap:3px}
+  .score-inp{width:52px;height:34px;border:0.5px solid #CBD9B0;border-radius:7px;padding:0 8px;font-size:14px;font-family:inherit;color:var(--ink);text-align:center}
+  .score-inp:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .maxlbl{font-size:13px;color:var(--muted)}
+  .note-inp{width:100%;min-width:120px;height:34px;border:0.5px solid #E1E6D6;border-radius:7px;padding:0 9px;font-size:13px;font-family:inherit;color:var(--ink);background:#fff}
+  .note-inp:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .note-inp::placeholder{color:#A9B196;font-style:italic}
   .muted-row td{color:#9AA383}
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px}
   .note{display:flex;gap:9px;align-items:center;background:#FBE9C2;color:var(--yellow-d);border-radius:9px;padding:10px 12px;font-size:13px;margin-top:14px}
@@ -72,7 +79,7 @@
 
     <div class="panel" id="panel" style="display:none">
       <table>
-        <thead><tr><th style="width:64px">เลขที่</th><th>ชื่อ-สกุล</th><th style="width:120px">การส่ง</th><th style="width:130px">ตรวจแล้ว</th></tr></thead>
+        <thead><tr><th style="width:56px">เลขที่</th><th>ชื่อ-สกุล</th><th style="width:104px">การส่ง</th><th style="width:118px">ตรวจแล้ว</th><th style="width:96px">คะแนน</th><th>หมายเหตุ</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -100,7 +107,7 @@
 
   const NAV = [
     { h: 'dashboard.html', l: 'แดชบอร์ด', i: 'ti-layout-dashboard' }, { h: 'scan.html', l: 'สแกนรับงาน', i: 'ti-qrcode' },
-    { h: 'assignments.html', l: 'งานที่มอบหมาย', i: 'ti-clipboard-list' }, { h: 'review.html', l: 'ตรวจงาน', i: 'ti-checkbox' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย', i: 'ti-clipboard-list' }, { h: 'review.html', l: 'ตรวจงาน', i: 'ti-checkbox' }, { h: 'points.html', l: 'แต้มสะสม', i: 'ti-trophy' },
     { h: 'qrcard.html', l: 'สร้าง QR', i: 'ti-id-badge-2' }, { h: 'students.html', l: 'นักเรียน', i: 'ti-user' },
     { h: 'subjects.html', l: 'วิชา', i: 'ti-book' }, { h: 'teachers.html', l: 'ครูผู้สอน', i: 'ti-users', admin: true },
     { h: 'reports.html', l: 'รายงาน', i: 'ti-file-text' }, { h: 'settings.html', l: 'ตั้งค่า', i: 'ti-settings', admin: true }
@@ -174,10 +181,12 @@
     $('emptyState').style.display = 'block';
   }
 
+  var currentMaxScore = '';
   async function loadRoster(assignmentId) {
     try {
       const r = await api('getAssignmentRoster', { assignmentId: assignmentId });
       if (!r || !r.ok) return;
+      currentMaxScore = (r.assignment && r.assignment.maxScore != null) ? r.assignment.maxScore : '';
       $('emptyState').style.display = 'none';
       $('summary').style.display = 'flex';
       $('summary').innerHTML =
@@ -194,37 +203,88 @@
 
   function renderRow(st) {
     const tr = document.createElement('tr');
-    let sub, check;
-    if (st.status === 'ยังไม่ส่ง') {
+    tr.setAttribute('data-student', st.studentId);
+    tr.setAttribute('data-sub', st.submissionId || '');
+    const notSubmitted = (st.status === 'ยังไม่ส่ง');
+    let sub, check, scoreCell;
+
+    if (notSubmitted) {
       tr.className = 'muted-row';
       sub = '<span class="pill p-no">ยังไม่ส่ง</span>';
       check = '<span style="color:#B6BBA6;font-size:13px">—</span>';
+      scoreCell = '<span style="color:#B6BBA6;font-size:13px">—</span>';
     } else {
       const reviewed = st.status === 'ตรวจแล้ว';
       sub = (st.timeliness === 'สาย') ? '<span class="pill p-late">ส่งสาย</span>' : '<span class="pill p-ok">ส่งตรงเวลา</span>';
-      check = '<label class="chk"><input type="checkbox" data-sub="' + st.submissionId + '"' + (reviewed ? ' checked' : '') + '>' + (reviewed ? 'ตรวจแล้ว' : 'ตรวจ') + '</label>';
+      check = '<label class="chk"><input type="checkbox" class="rev-cb" data-sub="' + st.submissionId + '"' + (reviewed ? ' checked' : '') + '>' + (reviewed ? 'ตรวจแล้ว' : 'ตรวจ') + '</label>';
+      const maxTxt = (currentMaxScore !== '' && currentMaxScore != null) ? ('<span class="maxlbl">/' + currentMaxScore + '</span>') : '';
+      const scoreVal = (st.score != null && st.score !== '') ? st.score : '';
+      scoreCell = '<span class="score-wrap"><input type="number" class="score-inp" min="0" step="1" value="' + scoreVal + '" data-sub="' + st.submissionId + '" placeholder="-">' + maxTxt + '</span>';
     }
-    tr.innerHTML = '<td>' + (st.seatNo || '-') + '</td><td>' + escapeHtml(st.name) + '</td><td>' + sub + '</td><td>' + check + '</td>';
+
+    // หมายเหตุ: แสดง autoNote เป็น placeholder ถ้าครูยังไม่กรอกเอง · กรอกได้ทุกคน (รวมคนไม่ส่ง)
+    const noteVal = st.note ? st.note : '';
+    const ph = st.autoNote ? st.autoNote : 'เพิ่มหมายเหตุ';
+    const noteCell = '<input type="text" class="note-inp" value="' + escapeHtml(noteVal) + '" placeholder="' + escapeHtml(ph) + '" data-student="' + st.studentId + '">';
+
+    tr.innerHTML =
+      '<td>' + (st.seatNo || '-') + '</td>' +
+      '<td>' + escapeHtml(st.name) + '</td>' +
+      '<td>' + sub + '</td>' +
+      '<td>' + check + '</td>' +
+      '<td>' + scoreCell + '</td>' +
+      '<td>' + noteCell + '</td>';
     return tr;
   }
   function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
+  // ติ๊ก "ตรวจแล้ว" — ส่งคะแนนในแถวเดียวกันไปพร้อมกัน
   $('tbody').addEventListener('change', async function (e) {
-    const cb = e.target.closest('input[type="checkbox"][data-sub]');
+    const cb = e.target.closest('input.rev-cb');
     if (!cb) return;
     const submissionId = cb.getAttribute('data-sub');
     const reviewed = cb.checked;
+    const tr = cb.closest('tr');
+    const scoreInp = tr.querySelector('.score-inp');
+    const scoreVal = (scoreInp && scoreInp.value.trim() !== '') ? Number(scoreInp.value) : undefined;
     cb.disabled = true;
-    const labelText = cb.parentNode;
+    const label = cb.parentNode;
     try {
-      const r = await api('markReviewed', { submissionId: submissionId, reviewed: reviewed });
+      const payload = { submissionId: submissionId, reviewed: reviewed };
+      if (reviewed && scoreVal !== undefined) payload.score = scoreVal;
+      const r = await api('markReviewed', payload);
       if (r && r.ok) {
-        labelText.lastChild.textContent = reviewed ? 'ตรวจแล้ว' : 'ตรวจ';
+        label.lastChild.textContent = reviewed ? 'ตรวจแล้ว' : 'ตรวจ';
         if ($('assignmentSel').value) refreshSummaryOnly($('assignmentSel').value);
       } else { cb.checked = !reviewed; }
     } catch (err) { cb.checked = !reviewed; }
     cb.disabled = false;
   });
+
+  // แก้คะแนนแล้วออกจากช่อง (blur) — บันทึกทันทีถ้าตรวจแล้ว / ถ้ายังไม่ตรวจจะบันทึกเมื่อติ๊กตรวจ
+  $('tbody').addEventListener('blur', async function (e) {
+    const inp = e.target;
+    if (inp.classList && inp.classList.contains('score-inp')) {
+      const tr = inp.closest('tr');
+      const cb = tr.querySelector('.rev-cb');
+      // บันทึกคะแนนเฉพาะกรณีติ๊กตรวจแล้ว (คะแนนผูกกับการตรวจ)
+      if (cb && cb.checked && inp.value.trim() !== '') {
+        const submissionId = inp.getAttribute('data-sub');
+        flash(inp);
+        try { await api('markReviewed', { submissionId: submissionId, reviewed: true, score: Number(inp.value) }); } catch (err) {}
+      }
+    } else if (inp.classList && inp.classList.contains('note-inp')) {
+      const studentId = inp.getAttribute('data-student');
+      const assignmentId = $('assignmentSel').value;
+      flash(inp);
+      try { await api('saveNote', { assignmentId: assignmentId, studentId: studentId, note: inp.value }); } catch (err) {}
+    }
+  }, true);
+
+  function flash(el) {
+    el.style.transition = 'background .15s'; el.style.background = '#DCEFC4';
+    setTimeout(function () { el.style.background = ''; }, 400);
+  }
 
   // อัปเดตเฉพาะตัวเลขสรุป โดยไม่รีโหลดทั้งตาราง (กันการกระพริบ)
   async function refreshSummaryOnly(assignmentId) {
