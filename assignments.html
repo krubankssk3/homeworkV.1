@@ -45,6 +45,12 @@
   .b-open{background:#DCEFC4;color:var(--green-d)} .b-closed{background:#E8E8DF;color:#5F5E5A}
   .mini{border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
   .mini-out{background:#fff;color:var(--green-d);border:0.5px solid #BFD49A} .mini-grey{background:#fff;color:#5F5E5A;border:0.5px solid #D8D8CF}
+  .mini-del{background:#fff;color:#9B2C2C;border:0.5px solid #E3B7B7;display:inline-flex;align-items:center;gap:4px}
+  .mini-del:hover{background:#FBE9E9}
+  .pager{display:none;align-items:center;justify-content:center;gap:14px;margin-top:16px}
+  .pg-btn{display:inline-flex;align-items:center;gap:4px;border:0.5px solid #CBD9B0;background:#fff;color:var(--green-d);border-radius:9px;padding:8px 14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+  .pg-btn:hover:not(:disabled){background:var(--green-l)} .pg-btn:disabled{opacity:.4;cursor:not-allowed}
+  .pg-info{font-size:13px;color:var(--muted)}
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px;background:#fff;border:0.5px dashed var(--line);border-radius:12px}
   .note{display:flex;gap:9px;align-items:center;background:#FBE9C2;color:var(--yellow-d);border-radius:9px;padding:10px 12px;font-size:13px;margin-top:14px}
   /* modal */
@@ -99,6 +105,7 @@
     <div class="note" id="noSubjectNote" style="display:none"><span>⚠️</span><span>ยังไม่มีวิชาที่คุณรับผิดชอบ กรุณาให้ผู้ดูแลเพิ่มวิชาให้ก่อน</span></div>
 
     <div class="list" id="list"></div>
+    <div class="pager" id="pager"></div>
     <div class="empty" id="emptyState" style="display:none">เลือกวิชาเพื่อดูรายการงาน หรือกด "สร้างงานใหม่"</div>
   </main>
 
@@ -216,9 +223,14 @@
 
   $('subjectSel').addEventListener('change', loadAssignments);
 
+  var allAssignments = [];
+  var currentPage = 1;
+  var PER_PAGE = 8;
+
   async function loadAssignments() {
     const sub = currentSubject();
     const list = $('list'); list.innerHTML = '';
+    $('pager').style.display = 'none';
     if (!sub) { $('emptyState').style.display = 'block'; return; }
     $('emptyState').style.display = 'none';
     try {
@@ -228,8 +240,34 @@
         list.innerHTML = '<div class="empty">ยังไม่มีงานในวิชานี้ กด "สร้างงานใหม่" เพื่อเริ่ม</div>';
         return;
       }
-      r.assignments.forEach(function (a) { list.appendChild(renderItem(a)); });
+      allAssignments = r.assignments;
+      currentPage = 1;
+      renderPage();
     } catch (e) {}
+  }
+
+  function renderPage() {
+    const list = $('list'); list.innerHTML = '';
+    const totalPages = Math.ceil(allAssignments.length / PER_PAGE);
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    const start = (currentPage - 1) * PER_PAGE;
+    const pageItems = allAssignments.slice(start, start + PER_PAGE);
+    pageItems.forEach(function (a) { list.appendChild(renderItem(a)); });
+    renderPager(totalPages);
+  }
+
+  function renderPager(totalPages) {
+    const pager = $('pager');
+    if (totalPages <= 1) { pager.style.display = 'none'; return; }
+    pager.style.display = 'flex';
+    pager.innerHTML =
+      '<button class="pg-btn" id="prevPg"' + (currentPage === 1 ? ' disabled' : '') + '><i class="ti ti-chevron-left"></i> ก่อนหน้า</button>' +
+      '<span class="pg-info">หน้า ' + currentPage + ' / ' + totalPages + ' · ทั้งหมด ' + allAssignments.length + ' งาน</span>' +
+      '<button class="pg-btn" id="nextPg"' + (currentPage === totalPages ? ' disabled' : '') + '>ถัดไป <i class="ti ti-chevron-right"></i></button>';
+    var pv = document.getElementById('prevPg'), nx = document.getElementById('nextPg');
+    if (pv) pv.addEventListener('click', function () { currentPage--; renderPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    if (nx) nx.addEventListener('click', function () { currentPage++; renderPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
   }
 
   function renderItem(a) {
@@ -247,6 +285,7 @@
       '<div class="actions">' + badge +
         '<button class="mini mini-out" data-edit="' + a.assignmentId + '">แก้ไข</button>' +
         '<button class="mini mini-grey" data-toggle="' + a.assignmentId + '" data-status="' + (isOpen ? 'ปิด' : 'เปิด') + '">' + (isOpen ? 'ปิดรับ' : 'เปิดรับ') + '</button>' +
+        '<button class="mini mini-del" data-delete="' + a.assignmentId + '" data-title="' + escapeHtml(a.title) + '"><i class="ti ti-trash" aria-hidden="true"></i> ลบ</button>' +
       '</div>';
     div._data = a;
     return div;
@@ -259,6 +298,7 @@
   $('list').addEventListener('click', async function (e) {
     const editBtn = e.target.closest('button[data-edit]');
     const toggleBtn = e.target.closest('button[data-toggle]');
+    const delBtn = e.target.closest('button[data-delete]');
     if (editBtn) {
       const item = editBtn.closest('.item');
       openModal(item._data);
@@ -268,6 +308,15 @@
         await api('closeAssignment', { assignmentId: toggleBtn.getAttribute('data-toggle'), status: toggleBtn.getAttribute('data-status') });
         loadAssignments();
       } catch (err) { toggleBtn.disabled = false; }
+    } else if (delBtn) {
+      const title = delBtn.getAttribute('data-title');
+      if (!confirm('ลบงาน "' + title + '" ?\n\nการส่งงานและคะแนนทั้งหมดของงานนี้จะถูกลบไปด้วย และกู้คืนไม่ได้')) return;
+      delBtn.disabled = true; delBtn.innerHTML = '<i class="ti ti-loader-2"></i> กำลังลบ...';
+      try {
+        const r = await api('deleteAssignment', { assignmentId: delBtn.getAttribute('data-delete') });
+        if (r && r.ok) { loadAssignments(); }
+        else { delBtn.disabled = false; delBtn.innerHTML = '<i class="ti ti-trash"></i> ลบ'; alert((r && r.error) || 'ลบไม่สำเร็จ'); }
+      } catch (err) { delBtn.disabled = false; delBtn.innerHTML = '<i class="ti ti-trash"></i> ลบ'; }
     }
   });
 
