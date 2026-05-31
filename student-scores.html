@@ -59,6 +59,28 @@
   .pill{font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap}
   .p-ok{background:#DCEFC4;color:var(--green-d)} .p-late{background:#FBE6BD;color:var(--yellow-d)} .p-ck{background:#CFE8AE;color:var(--green-d)}
   .scorecell{font-weight:600;color:var(--green-d)}
+  .grand-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  @media(max-width:560px){.grand-summary{grid-template-columns:repeat(2,1fr)}}
+  .gs-item{background:var(--green-l);border:0.5px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .gs-item b{display:block;font-size:24px;font-weight:700;color:var(--green-d)}
+  .gs-item span{font-size:12px;color:var(--muted)}
+  .job-card{background:#fff;border:0.5px solid var(--line);border-radius:14px;margin-top:14px;overflow:hidden}
+  .job-head{padding:13px 16px;background:#FAFCF4;border-bottom:0.5px solid #EDF1E2;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+  .job-title{font-size:15px;font-weight:600;color:var(--green-d);display:flex;align-items:center;gap:7px}
+  .job-title i{font-size:18px}
+  .job-meta{font-size:12px;color:var(--muted)}
+  .job-table{width:100%;border-collapse:collapse;font-size:14px}
+  .job-table th,.job-table td{text-align:left;padding:9px 16px;border-bottom:0.5px solid #F1F4EA}
+  .job-table th{color:var(--muted);font-weight:600;font-size:12px}
+  .job-table tr:last-child td{border-bottom:none}
+  .job-table .seat{color:var(--muted);width:48px}
+  .job-table .nm{font-weight:500}
+  .job-table .mx{font-size:13px;color:var(--muted);font-weight:400}
+  .job-empty{padding:14px 16px;color:var(--muted);font-size:13px;text-align:center}
+  .job-pending{padding:10px 16px;background:#FBF6E3;font-size:12px;color:var(--yellow-d);line-height:1.6}
+  .sc-none{color:#A9B196;font-size:12px}
+  .pill{font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .p-ok{background:#DCEFC4;color:var(--green-d)} .p-late{background:#FBE6BD;color:var(--yellow-d)} .p-ck{background:#CFE8AE;color:var(--green-d)}
   footer{margin-top:18px;padding:14px 16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
   footer b{color:var(--green-d);font-weight:600}
   @media print{header,nav.nav,.tabs,.toolbar .btn,footer{display:none!important}body{background:#fff}main{padding:0;max-width:none}.panel{border:none}th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
@@ -203,29 +225,71 @@
     if (!r.rows.length) { $('matrixContent').innerHTML = '<div class="empty">ยังไม่มีนักเรียนในห้องนี้</div>'; $('printMatrixBtn').style.display = 'none'; return; }
     $('printMatrixBtn').style.display = 'inline-flex';
 
-    let head = '<tr><th class="seat">เลขที่</th><th>ชื่อ-สกุล</th>';
-    r.assignments.forEach(function (a) { head += '<th class="job" title="' + escapeHtml(a.title) + '">' + escapeHtml(a.title) + '</th>'; });
-    head += '<th class="total">รวม</th></tr>';
-    // แถวคะแนนเต็ม
-    let maxrow = '<tr class="maxrow"><th></th><th style="text-align:right">คะแนนเต็ม →</th>';
-    r.assignments.forEach(function (a) { maxrow += '<th class="job">' + (a.maxScore != null ? a.maxScore : '-') + '</th>'; });
-    maxrow += '<th class="job">' + (r.totalMax || '-') + '</th></tr>';
+    // สรุปรวมทั้งวิชา
+    var totalStudents = r.rows.length;
+    var grandScore = 0, grandHasScore = 0, grandSubmitted = 0, grandSlots = 0;
 
-    let body = '';
-    r.rows.forEach(function (row) {
-      body += '<tr><td class="seat">' + escapeHtml(row.seatNo) + '</td><td class="nm">' + escapeHtml(row.name) + '</td>';
-      row.cells.forEach(function (c) {
-        if (c.status === 'ยังไม่ส่ง') { body += '<td class="sc sc-nosubmit">–</td>'; }
-        else if (c.score == null) { body += '<td class="sc sc-none">○</td>'; } // ส่งแล้วแต่ยังไม่ให้คะแนน
-        else { body += '<td class="sc sc-has">' + c.score + '</td>'; }
+    // จัดกลุ่มตามงาน: แต่ละงาน → รายชื่อนักเรียน
+    var html = '<div class="sub" style="margin-top:12px">' + escapeHtml(r.subject.name) + ' · ' + escapeHtml(r.subject.roomLabel) + ' · นักเรียน ' + totalStudents + ' คน</div>';
+
+    r.assignments.forEach(function (a, ai) {
+      // รวบรวมนักเรียนของงานนี้ (จาก cells ตำแหน่ง ai ของแต่ละ row)
+      var submitted = [], notSubmitted = [], sumScore = 0, scoredCount = 0;
+      r.rows.forEach(function (row) {
+        var c = row.cells[ai];
+        if (c.status === 'ยังไม่ส่ง') { notSubmitted.push(row); }
+        else {
+          submitted.push({ seatNo: row.seatNo, name: row.name, score: c.score, status: c.status, timeliness: c.timeliness });
+          if (c.score != null) { sumScore += c.score; scoredCount++; }
+        }
       });
-      body += '<td class="total">' + (row.total != null ? row.total : '-') + '</td></tr>';
+      grandSubmitted += submitted.length; grandSlots += totalStudents;
+      grandScore += sumScore; grandHasScore += scoredCount;
+
+      var maxTxt = (a.maxScore != null) ? (' · เต็ม ' + a.maxScore) : '';
+      var avgTxt = scoredCount ? (' · เฉลี่ย ' + (sumScore / scoredCount).toFixed(1) + (a.maxScore != null ? '/' + a.maxScore : '')) : '';
+
+      html += '<div class="job-card">' +
+        '<div class="job-head"><div class="job-title"><i class="ti ti-clipboard-text"></i> ' + escapeHtml(a.title) + '</div>' +
+        '<div class="job-meta">ส่งแล้ว ' + submitted.length + '/' + totalStudents + ' คน' + maxTxt + avgTxt + '</div></div>';
+
+      if (!submitted.length) {
+        html += '<div class="job-empty">ยังไม่มีนักเรียนส่งงานนี้</div>';
+      } else {
+        html += '<table class="job-table"><thead><tr><th class="seat">เลขที่</th><th>ชื่อ-สกุล</th><th style="width:110px">คะแนนที่ได้</th><th style="width:90px">สถานะ</th></tr></thead><tbody>';
+        // เรียงคะแนนมาก→น้อย (คนยังไม่ให้คะแนนไว้ท้าย)
+        submitted.sort(function (x, y) {
+          if (x.score == null && y.score == null) return (Number(x.seatNo) || 0) - (Number(y.seatNo) || 0);
+          if (x.score == null) return 1; if (y.score == null) return -1;
+          return y.score - x.score;
+        });
+        submitted.forEach(function (s) {
+          var scoreTxt = (s.score != null) ? ('<b>' + s.score + '</b>' + (a.maxScore != null ? '<span class="mx">/' + a.maxScore + '</span>' : '')) : '<span class="sc-none">○ ยังไม่ให้คะแนน</span>';
+          var st = (s.status === 'ตรวจแล้ว') ? '<span class="pill p-ck">ตรวจแล้ว</span>' : (s.timeliness === 'สาย' ? '<span class="pill p-late">ส่งสาย</span>' : '<span class="pill p-ok">ตรงเวลา</span>');
+          html += '<tr><td class="seat">' + escapeHtml(s.seatNo) + '</td><td class="nm">' + escapeHtml(s.name) + '</td><td class="scorecell">' + scoreTxt + '</td><td>' + st + '</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+      // รายชื่อคนยังไม่ส่ง (ถ้ามี)
+      if (notSubmitted.length) {
+        html += '<div class="job-pending"><b>ยังไม่ส่ง ' + notSubmitted.length + ' คน:</b> ' +
+          notSubmitted.map(function (n) { return escapeHtml('เลขที่ ' + n.seatNo + ' ' + n.name); }).join(' · ') + '</div>';
+      }
+      html += '</div>';
     });
 
-    $('matrixContent').innerHTML =
-      '<div class="sub" style="margin-top:12px">' + escapeHtml(r.subject.name) + ' · ' + escapeHtml(r.subject.roomLabel) +
-      ' · <span style="color:#9AA383">– ยังไม่ส่ง · ○ ส่งแล้วยังไม่ให้คะแนน</span></div>' +
-      '<div class="panel"><table class="matrix"><thead>' + head + maxrow + '</thead><tbody>' + body + '</tbody></table></div>';
+    // กล่องสรุปรวมทั้งหมด
+    var overallRate = grandSlots ? Math.round(grandSubmitted / grandSlots * 100) : 0;
+    var overallAvg = grandHasScore ? (grandScore / grandHasScore).toFixed(1) : '-';
+    html =
+      '<div class="grand-summary">' +
+        '<div class="gs-item"><b>' + r.assignments.length + '</b><span>งานทั้งหมด</span></div>' +
+        '<div class="gs-item"><b>' + totalStudents + '</b><span>นักเรียน</span></div>' +
+        '<div class="gs-item"><b>' + overallRate + '%</b><span>อัตราการส่งรวม</span></div>' +
+        '<div class="gs-item"><b>' + overallAvg + '</b><span>คะแนนเฉลี่ยรวม</span></div>' +
+      '</div>' + html;
+
+    $('matrixContent').innerHTML = html;
   }
 
   $('printMatrixBtn').addEventListener('click', function () { window.print(); });
