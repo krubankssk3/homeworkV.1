@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คะแนนงาน · ระบบส่งงานบ้านละลม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.21.0/tabler-icons.min.css">
+<style>
+  :root{--green:#5E9A2D;--green-d:#2F5511;--green-l:#EFF4E4;--yellow:#F7C948;--yellow-d:#6B4D06;--bg:#F4F8EC;--ink:#33421C;--muted:#6E7B56;--line:#D2DEBC;--white:#fff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--green);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+  .brand .lg{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:15px;font-weight:700;flex:none}
+  .brand .lg img{width:100%;height:100%;object-fit:contain}
+  .user{display:flex;align-items:center;gap:9px;font-size:13px}
+  .btn-logout{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit;cursor:pointer}
+  .btn-logout:hover{background:rgba(255,255,255,.28)}
+  nav.nav{background:#fff;border-bottom:0.5px solid var(--line);display:flex;gap:2px;padding:0 10px;overflow-x:auto;white-space:nowrap}
+  nav.nav a{display:inline-flex;align-items:center;gap:6px;padding:12px 13px;font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.nav a i{font-size:16px}
+  nav.nav a:hover{color:var(--green-d)} nav.nav a.active{color:var(--green-d);font-weight:600;border-bottom-color:var(--green)}
+  main{flex:1;width:100%;max-width:1040px;margin:0 auto;padding:16px}
+  h1{font-size:19px;font-weight:600;color:var(--green-d)} .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .tabs{display:flex;gap:6px;margin-top:14px}
+  .tab{display:inline-flex;align-items:center;gap:6px;border:0.5px solid #CBD9B0;background:#fff;color:var(--green-d);border-radius:9px;padding:9px 16px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer}
+  .tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .tab i{font-size:17px}
+  .toolbar{margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  select{height:42px;border:0.5px solid #CBD9B0;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink)}
+  select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
+  .btn{border:none;border-radius:9px;padding:10px 14px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+  .btn-yellow{background:var(--yellow);color:var(--yellow-d)}
+  .panel{background:#fff;border:0.5px solid var(--line);border-radius:14px;margin-top:14px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:0.5px solid #EDF1E2;white-space:nowrap}
+  th{color:var(--muted);font-weight:600;font-size:12px;background:#FAFCF4;position:sticky;top:0}
+  tr:last-child td{border-bottom:none}
+  .matrix th.job{text-align:center;min-width:74px}
+  .matrix td.sc{text-align:center;font-weight:600}
+  .matrix .seat{color:var(--muted);width:42px}
+  .matrix .nm{font-weight:500;color:var(--ink)}
+  .matrix .total{text-align:center;font-weight:700;color:var(--green-d);background:#FAFCF4}
+  .sc-has{color:var(--green-d)} .sc-none{color:#C2C7B5} .sc-nosubmit{color:#C77} 
+  .maxrow th{font-weight:400;color:#9AA383;font-size:11px;background:#fff}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px}
+  /* รายคน */
+  .head-card{background:#fff;border:0.5px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .avatar{width:48px;height:48px;border-radius:50%;background:var(--green-l);color:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex:none}
+  .head-card .info{flex:1;min-width:0}
+  .head-card .nm{font-size:17px;font-weight:600;color:var(--green-d)}
+  .head-card .rm{font-size:13px;color:var(--muted);margin-top:2px}
+  .totals{display:flex;gap:10px;flex-wrap:wrap}
+  .tchip{background:var(--green-l);border-radius:10px;padding:8px 14px;text-align:center}
+  .tchip b{display:block;font-size:20px;color:var(--green-d);font-weight:700}
+  .tchip span{font-size:12px;color:var(--muted)}
+  .pill{font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .p-ok{background:#DCEFC4;color:var(--green-d)} .p-late{background:#FBE6BD;color:var(--yellow-d)} .p-ck{background:#CFE8AE;color:var(--green-d)}
+  .scorecell{font-weight:600;color:var(--green-d)}
+  footer{margin-top:18px;padding:14px 16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  footer b{color:var(--green-d);font-weight:600}
+  @media print{header,nav.nav,.tabs,.toolbar .btn,footer{display:none!important}body{background:#fff}main{padding:0;max-width:none}.panel{border:none}th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lg" id="logo">โล</span><span id="schoolName">บ้านละลม</span></div>
+    <div class="user"><span id="userName">—</span><button class="btn-logout" id="logoutBtn"><i class="ti ti-logout" aria-hidden="true"></i> ออกจากระบบ</button></div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+
+  <main>
+    <h1>คะแนนการส่งงาน</h1>
+    <div class="sub">ดูคะแนนงานแต่ละชิ้นที่ครูกรอกตอนตรวจงาน — แยกตามวิชา</div>
+
+    <div class="tabs">
+      <button class="tab active" id="tabMatrix" data-view="matrix"><i class="ti ti-table"></i> ตารางทั้งห้อง</button>
+      <button class="tab" id="tabPerson" data-view="person"><i class="ti ti-user"></i> รายคน</button>
+    </div>
+
+    <!-- มุมมองตารางทั้งห้อง -->
+    <div id="viewMatrix">
+      <div class="toolbar">
+        <select id="subjectSel"><option value="">— เลือกวิชา —</option></select>
+        <button class="btn btn-yellow" id="printMatrixBtn" style="display:none"><i class="ti ti-printer"></i> พิมพ์</button>
+      </div>
+      <div id="matrixContent"></div>
+    </div>
+
+    <!-- มุมมองรายคน -->
+    <div id="viewPerson" style="display:none">
+      <div class="toolbar">
+        <select id="roomSel"><option value="">— เลือกห้อง —</option></select>
+        <select id="studentSel"><option value="">— เลือกนักเรียน —</option></select>
+      </div>
+      <div id="personContent"></div>
+    </div>
+  </main>
+
+  <footer>ผู้พัฒนา: <b>นายชิติพัทธ์ นิลวรรณ</b><br>ครูโรงเรียนบ้านละลม สพป.ศรีสะเกษ เขต 3</footer>
+
+<script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCTrn5F2tZ-UJiBazA1PA2np5Lwwhy_TYYie7liGg9LFIcaavqF78PLiPqaC3TwyXt/exec';
+
+  const token = sessionStorage.getItem('bl_token');
+  const session = JSON.parse(sessionStorage.getItem('bl_session') || 'null');
+  if (!token || !session) { location.replace('login.html'); }
+
+  async function api(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action: action, token: token }, payload || {}))
+    });
+    return res.json();
+  }
+  const $ = function (id) { return document.getElementById(id); };
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  const NAV = [
+    { h: 'admin-dashboard.html', l: 'ภาพรวม', i: 'ti-chart-bar' }, { h: 'scan.html', l: 'สแกนรับงาน', i: 'ti-qrcode' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย', i: 'ti-clipboard-list' }, { h: 'review.html', l: 'ตรวจงาน', i: 'ti-checkbox' },
+    { h: 'student-scores.html', l: 'คะแนนงาน', i: 'ti-report-analytics' }, { h: 'points.html', l: 'แต้มสะสม', i: 'ti-trophy' },
+    { h: 'qrcard.html', l: 'สร้าง QR', i: 'ti-id-badge-2' }, { h: 'students.html', l: 'นักเรียน', i: 'ti-user' },
+    { h: 'subjects.html', l: 'วิชา', i: 'ti-book' }, { h: 'teachers.html', l: 'ครูผู้สอน', i: 'ti-users', admin: true },
+    { h: 'reports.html', l: 'รายงาน', i: 'ti-file-text' }, { h: 'settings.html', l: 'ตั้งค่า', i: 'ti-settings', admin: true }
+  ];
+  (function renderNav() {
+    const role = (session && session.role) || 'teacher';
+    NAV.forEach(function (it) {
+      if (it.admin && role !== 'admin') return;
+      const a = document.createElement('a'); a.href = it.h;
+      a.innerHTML = '<i class="ti ' + it.i + '" aria-hidden="true"></i> ' + it.l;
+      if (it.h === 'student-scores.html') a.className = 'active';
+      $('nav').appendChild(a);
+    });
+  })();
+  if (session) $('userName').textContent = session.name || 'ผู้ใช้';
+
+  $('logoutBtn').addEventListener('click', async function () {
+    try { await api('logout'); } catch (e) {}
+    sessionStorage.removeItem('bl_token'); sessionStorage.removeItem('bl_session');
+    location.replace('login.html');
+  });
+
+  (async function () {
+    try {
+      const c = await api('getConfig');
+      if (c && c.ok) {
+        if (c.schoolName) $('schoolName').textContent = c.schoolName;
+        if (c.logoUrl) { const img = document.createElement('img'); img.src = c.logoUrl; img.alt = ''; $('logo').textContent = ''; $('logo').appendChild(img); }
+      }
+    } catch (e) {}
+  })();
+
+  // ---- สลับแท็บ ----
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+      t.classList.add('active');
+      const v = t.getAttribute('data-view');
+      $('viewMatrix').style.display = (v === 'matrix') ? 'block' : 'none';
+      $('viewPerson').style.display = (v === 'person') ? 'block' : 'none';
+    });
+  });
+
+  // ---- โหลดวิชา + ห้อง/นักเรียน ----
+  let subjects = [], allStudents = [];
+  (async function init() {
+    try {
+      const rs = await api('listSubjects');
+      if (rs && rs.ok) {
+        subjects = rs.subjects;
+        subjects.forEach(function (s) { const o = document.createElement('option'); o.value = s.subjectId; o.textContent = s.name + ' · ' + s.roomLabel; $('subjectSel').appendChild(o); });
+      }
+      const rt = await api('listStudents');
+      if (rt && rt.ok) {
+        allStudents = rt.students;
+        const rooms = {}; allStudents.forEach(function (s) { rooms[s.roomLabel] = true; });
+        Object.keys(rooms).sort().forEach(function (rl) { const o = document.createElement('option'); o.value = rl; o.textContent = 'ห้อง ' + rl; $('roomSel').appendChild(o); });
+      }
+    } catch (e) {}
+  })();
+
+  // ========== มุมมองตารางทั้งห้อง ==========
+  $('subjectSel').addEventListener('change', function () {
+    if (this.value) loadMatrix(this.value);
+    else { $('matrixContent').innerHTML = ''; $('printMatrixBtn').style.display = 'none'; }
+  });
+
+  async function loadMatrix(subjectId) {
+    $('matrixContent').innerHTML = '<div class="empty">กำลังโหลด...</div>';
+    try {
+      const r = await api('getScoreMatrix', { subjectId: subjectId });
+      if (!r || !r.ok) { $('matrixContent').innerHTML = '<div class="empty">' + ((r && r.error) || 'โหลดข้อมูลไม่สำเร็จ') + '</div>'; return; }
+      renderMatrix(r);
+    } catch (e) { $('matrixContent').innerHTML = '<div class="empty">เชื่อมต่อเซิร์ฟเวอร์ไม่ได้</div>'; }
+  }
+
+  function renderMatrix(r) {
+    if (!r.assignments.length) { $('matrixContent').innerHTML = '<div class="empty">ยังไม่มีงานในวิชานี้</div>'; $('printMatrixBtn').style.display = 'none'; return; }
+    if (!r.rows.length) { $('matrixContent').innerHTML = '<div class="empty">ยังไม่มีนักเรียนในห้องนี้</div>'; $('printMatrixBtn').style.display = 'none'; return; }
+    $('printMatrixBtn').style.display = 'inline-flex';
+
+    let head = '<tr><th class="seat">เลขที่</th><th>ชื่อ-สกุล</th>';
+    r.assignments.forEach(function (a) { head += '<th class="job" title="' + escapeHtml(a.title) + '">' + escapeHtml(a.title) + '</th>'; });
+    head += '<th class="total">รวม</th></tr>';
+    // แถวคะแนนเต็ม
+    let maxrow = '<tr class="maxrow"><th></th><th style="text-align:right">คะแนนเต็ม →</th>';
+    r.assignments.forEach(function (a) { maxrow += '<th class="job">' + (a.maxScore != null ? a.maxScore : '-') + '</th>'; });
+    maxrow += '<th class="job">' + (r.totalMax || '-') + '</th></tr>';
+
+    let body = '';
+    r.rows.forEach(function (row) {
+      body += '<tr><td class="seat">' + escapeHtml(row.seatNo) + '</td><td class="nm">' + escapeHtml(row.name) + '</td>';
+      row.cells.forEach(function (c) {
+        if (c.status === 'ยังไม่ส่ง') { body += '<td class="sc sc-nosubmit">–</td>'; }
+        else if (c.score == null) { body += '<td class="sc sc-none">○</td>'; } // ส่งแล้วแต่ยังไม่ให้คะแนน
+        else { body += '<td class="sc sc-has">' + c.score + '</td>'; }
+      });
+      body += '<td class="total">' + (row.total != null ? row.total : '-') + '</td></tr>';
+    });
+
+    $('matrixContent').innerHTML =
+      '<div class="sub" style="margin-top:12px">' + escapeHtml(r.subject.name) + ' · ' + escapeHtml(r.subject.roomLabel) +
+      ' · <span style="color:#9AA383">– ยังไม่ส่ง · ○ ส่งแล้วยังไม่ให้คะแนน</span></div>' +
+      '<div class="panel"><table class="matrix"><thead>' + head + maxrow + '</thead><tbody>' + body + '</tbody></table></div>';
+  }
+
+  $('printMatrixBtn').addEventListener('click', function () { window.print(); });
+
+  // ========== มุมมองรายคน ==========
+  $('roomSel').addEventListener('change', function () {
+    fillStudents(this.value); $('personContent').innerHTML = '';
+  });
+  $('studentSel').addEventListener('change', function () { if (this.value) loadPerson(this.value); });
+
+  function fillStudents(roomLabel) {
+    const sel = $('studentSel'); sel.innerHTML = '<option value="">— เลือกนักเรียน —</option>';
+    allStudents.filter(function (s) { return !roomLabel || s.roomLabel === roomLabel; })
+      .sort(function (a, b) { return (Number(a.seatNo) || 0) - (Number(b.seatNo) || 0); })
+      .forEach(function (s) { const o = document.createElement('option'); o.value = s.studentId; o.textContent = 'เลขที่ ' + s.seatNo + ' · ' + s.name; sel.appendChild(o); });
+  }
+
+  async function loadPerson(studentId) {
+    $('personContent').innerHTML = '<div class="empty">กำลังโหลด...</div>';
+    try {
+      const r = await api('getScoreSummary', { studentId: studentId });
+      if (!r || !r.ok) { $('personContent').innerHTML = '<div class="empty">' + ((r && r.error) || 'โหลดข้อมูลไม่สำเร็จ') + '</div>'; return; }
+      renderPerson(r);
+    } catch (e) { $('personContent').innerHTML = '<div class="empty">เชื่อมต่อเซิร์ฟเวอร์ไม่ได้</div>'; }
+  }
+
+  function renderPerson(r) {
+    const st = r.student, t = r.totals;
+    const initial = (st.name || '?').replace(/^(เด็กชาย|เด็กหญิง|นาย|นางสาว|นาง|ด\.ช\.|ด\.ญ\.)/, '').trim().charAt(0) || '?';
+    let html =
+      '<div class="head-card"><div class="avatar">' + escapeHtml(initial) + '</div>' +
+        '<div class="info"><div class="nm">' + escapeHtml(st.name) + '</div>' +
+        '<div class="rm">เลขที่ ' + escapeHtml(st.seatNo) + ' · ' + escapeHtml(st.roomLabel) + '</div></div>' +
+        '<div class="totals">' +
+          '<div class="tchip"><b>' + t.score + (t.max ? '/' + t.max : '') + '</b><span>คะแนนรวม</span></div>' +
+          '<div class="tchip"><b>' + t.count + '</b><span>งานที่ส่ง</span></div>' +
+        '</div></div>';
+    if (!r.items.length) {
+      html += '<div class="panel"><div class="empty">ยังไม่มีการส่งงาน</div></div>';
+    } else {
+      html += '<div class="panel"><table><thead><tr><th>วิชา</th><th>งาน</th><th style="width:96px">การส่ง</th><th style="width:90px">คะแนน</th></tr></thead><tbody>';
+      r.items.forEach(function (it) {
+        const tl = (it.timeliness === 'สาย') ? '<span class="pill p-late">สาย</span>' : '<span class="pill p-ok">ตรงเวลา</span>';
+        const ck = (it.status === 'ตรวจแล้ว') ? ' <span class="pill p-ck">ตรวจแล้ว</span>' : '';
+        const sc = (it.score != null) ? (it.score + (it.maxScore != null ? '/' + it.maxScore : '')) : '<span style="color:#B6BBA6">-</span>';
+        html += '<tr><td>' + escapeHtml(it.subjectName) + '</td><td>' + escapeHtml(it.title) + '</td><td>' + tl + ck + '</td><td class="scorecell">' + sc + '</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    $('personContent').innerHTML = html;
+  }
+</script>
+</body>
+</html>
