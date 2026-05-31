@@ -118,7 +118,9 @@
         <div><label for="assignedDate"><span class="n">4</span>วันที่สั่งงาน</label><input id="assignedDate" type="date"></div>
         <div><label for="dueDate"><span class="n">5</span>กำหนดส่งงาน</label><input id="dueDate" type="datetime-local"></div>
       </div>
-      <label><span class="n">6</span>สถานะการส่งงาน <span style="color:#9AA383;font-weight:400">— ระบบติดตามอัตโนมัติ</span></label>
+      <label for="maxScore"><span class="n">6</span>คะแนนเต็มของงาน <span style="color:#9AA383;font-weight:400">— เว้นว่างได้ถ้าไม่ให้คะแนน</span></label>
+      <input id="maxScore" type="number" min="0" step="1" placeholder="เช่น 10">
+      <label><span class="n">7</span>สถานะการส่งงาน <span style="color:#9AA383;font-weight:400">— ระบบติดตามอัตโนมัติ</span></label>
       <div class="flow">
         <div class="sbox s-no"><div class="tt">ยังไม่ส่งงาน</div><div class="dd">ค่าเริ่มต้น</div></div>
         <div class="sbox s-ok"><div class="tt">ส่งงานแล้ว</div><div class="dd">สแกน QR</div></div>
@@ -152,7 +154,7 @@
   // ---- เมนูนำทาง ----
   const NAV = [
     { h: 'dashboard.html', l: 'แดชบอร์ด', i: 'ti-layout-dashboard' }, { h: 'scan.html', l: 'สแกนรับงาน', i: 'ti-qrcode' },
-    { h: 'assignments.html', l: 'งานที่มอบหมาย', i: 'ti-clipboard-list' }, { h: 'review.html', l: 'ตรวจงาน', i: 'ti-checkbox' },
+    { h: 'assignments.html', l: 'งานที่มอบหมาย', i: 'ti-clipboard-list' }, { h: 'review.html', l: 'ตรวจงาน', i: 'ti-checkbox' }, { h: 'points.html', l: 'แต้มสะสม', i: 'ti-trophy' },
     { h: 'qrcard.html', l: 'สร้าง QR', i: 'ti-id-badge-2' }, { h: 'students.html', l: 'นักเรียน', i: 'ti-user' },
     { h: 'subjects.html', l: 'วิชา', i: 'ti-book' }, { h: 'teachers.html', l: 'ครูผู้สอน', i: 'ti-users', admin: true },
     { h: 'reports.html', l: 'รายงาน', i: 'ti-file-text' }, { h: 'settings.html', l: 'ตั้งค่า', i: 'ti-settings', admin: true }
@@ -289,6 +291,7 @@
       $('detail').value = data.detail || '';
       $('assignedDate').value = String(data.assignedDate || '').substring(0, 10) || todayStr();
       $('dueDate').value = String(data.dueDate || '').substring(0, 16);
+      $('maxScore').value = (data.maxScore != null && data.maxScore !== '') ? data.maxScore : '';
       $('subjectLabel').textContent = data.subjectName + ' · ' + data.roomLabel;
     } else {
       editingId = null;
@@ -297,6 +300,7 @@
       $('title').value = ''; $('detail').value = '';
       $('assignedDate').value = todayStr();
       $('dueDate').value = todayStr() + 'T16:30';
+      $('maxScore').value = '';
       $('subjectLabel').textContent = sub ? (sub.name + ' · ' + sub.roomLabel) : '—';
     }
     $('overlay').classList.add('show');
@@ -316,7 +320,8 @@
         assignmentId: editingId || undefined,
         subjectId: sub ? sub.subjectId : undefined,
         title: title, detail: $('detail').value.trim(),
-        assignedDate: $('assignedDate').value, dueDate: dueDate
+        assignedDate: $('assignedDate').value, dueDate: dueDate,
+        maxScore: $('maxScore').value.trim() === '' ? '' : Number($('maxScore').value)
       }
     };
     $('saveBtn').disabled = true;
