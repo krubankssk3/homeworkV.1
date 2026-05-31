@@ -198,19 +198,53 @@
     const ctx = $('donut'); if (!ctx) return;
     if (donutChart) donutChart.destroy();
     const total = onTime + late + pending;
+    const empty = (total === 0);
+
+    // ปลั๊กอินวาดข้อความตรงกลางวงโดนัท
+    const centerText = {
+      id: 'centerText',
+      afterDraw: function (chart) {
+        const c2 = chart.ctx; const area = chart.chartArea;
+        if (!area) return;
+        const cx = (area.left + area.right) / 2, cy = (area.top + area.bottom) / 2;
+        c2.save(); c2.textAlign = 'center'; c2.textBaseline = 'middle';
+        if (empty) {
+          c2.font = '600 15px "IBM Plex Sans Thai", sans-serif';
+          c2.fillStyle = cssVar('--muted') || '#6E7B56';
+          c2.fillText('ยังไม่มีข้อมูล', cx, cy - 8);
+          c2.font = '400 12px "IBM Plex Sans Thai", sans-serif';
+          c2.fillText('วันนี้', cx, cy + 12);
+        } else {
+          const pct = Math.round(onTime / total * 100);
+          c2.font = '700 26px "IBM Plex Sans Thai", sans-serif';
+          c2.fillStyle = cssVar('--green-d') || '#2F5511';
+          c2.fillText(pct + '%', cx, cy - 6);
+          c2.font = '400 12px "IBM Plex Sans Thai", sans-serif';
+          c2.fillStyle = cssVar('--muted') || '#6E7B56';
+          c2.fillText('ตรงเวลา', cx, cy + 16);
+        }
+        c2.restore();
+      }
+    };
+
     donutChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['ส่งตรงเวลา', 'ส่งสาย', 'ยังไม่ส่ง'],
-        datasets: [{ data: [onTime, late, pending], backgroundColor: [cssVar('--green'), cssVar('--yellow'), cssVar('--grey')], borderWidth: 2, borderColor: '#fff' }]
+        labels: empty ? ['ยังไม่มีข้อมูล'] : ['ส่งตรงเวลา', 'ส่งสาย', 'ยังไม่ส่ง'],
+        datasets: [{
+          data: empty ? [1] : [onTime, late, pending],
+          backgroundColor: empty ? ['#EAEFE0'] : [cssVar('--green'), cssVar('--yellow'), cssVar('--grey')],
+          borderWidth: 2, borderColor: '#fff'
+        }]
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '64%',
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: function (c) { const pct = total ? Math.round(c.parsed / total * 100) : 0; return c.label + ': ' + c.parsed + ' คน (' + pct + '%)'; } } }
+          tooltip: { enabled: !empty, callbacks: { label: function (c) { const pct = total ? Math.round(c.parsed / total * 100) : 0; return c.label + ': ' + c.parsed + ' คน (' + pct + '%)'; } } }
         }
-      }
+      },
+      plugins: [centerText]
     });
   }
 
