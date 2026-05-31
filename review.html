@@ -46,6 +46,18 @@
   .note-inp{width:100%;min-width:120px;height:34px;border:0.5px solid #E1E6D6;border-radius:7px;padding:0 9px;font-size:13px;font-family:inherit;color:var(--ink);background:#fff}
   .note-inp:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(94,154,45,.2)}
   .note-inp::placeholder{color:#A9B196;font-style:italic}
+  .savebar{display:flex;align-items:center;gap:12px;margin-top:14px;justify-content:flex-end}
+  .savehint{font-size:13px;color:var(--yellow-d);font-weight:600;display:none}
+  .savehint.show{display:inline}
+  .btn-saveall{display:inline-flex;align-items:center;gap:6px;background:var(--green);color:#fff;border:none;border-radius:9px;padding:10px 16px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:filter .15s,transform .05s}
+  .btn-saveall:hover{filter:brightness(1.05)} .btn-saveall:active{transform:scale(.99)}
+  .btn-saveall:disabled{opacity:.5;cursor:not-allowed;filter:none}
+  .btn-saverow{display:inline-flex;align-items:center;gap:5px;border:0.5px solid #BFD49A;background:#fff;color:var(--green-d);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap}
+  .btn-saverow:hover{background:var(--green-l)}
+  .btn-saverow.dirty{background:var(--green);color:#fff;border-color:var(--green);animation:pulse 1.4s ease-in-out infinite}
+  .btn-saverow.saved{background:#fff;color:var(--muted);border-color:#E1E6D6;cursor:default;animation:none}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(94,154,45,.4)}50%{box-shadow:0 0 0 5px rgba(94,154,45,0)}}
+  @media(prefers-reduced-motion:reduce){.btn-saverow.dirty{animation:none}}
   .muted-row td{color:#9AA383}
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px}
   .note{display:flex;gap:9px;align-items:center;background:#FBE9C2;color:var(--yellow-d);border-radius:9px;padding:10px 12px;font-size:13px;margin-top:14px}
@@ -77,9 +89,14 @@
 
     <div class="summary" id="summary" style="display:none"></div>
 
+    <div class="savebar" id="savebar" style="display:none">
+      <span class="savehint" id="saveHint"></span>
+      <button class="btn-saveall" id="saveAllBtn"><i class="ti ti-device-floppy" aria-hidden="true"></i> บันทึกทั้งหมด</button>
+    </div>
+
     <div class="panel" id="panel" style="display:none">
       <table>
-        <thead><tr><th style="width:56px">เลขที่</th><th>ชื่อ-สกุล</th><th style="width:104px">การส่ง</th><th style="width:118px">ตรวจแล้ว</th><th style="width:96px">คะแนน</th><th>หมายเหตุ</th></tr></thead>
+        <thead><tr><th style="width:56px">เลขที่</th><th>ชื่อ-สกุล</th><th style="width:104px">การส่ง</th><th style="width:118px">ตรวจแล้ว</th><th style="width:96px">คะแนน</th><th>หมายเหตุ</th><th style="width:96px">บันทึก</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -178,6 +195,7 @@
   function resetView() {
     $('panel').style.display = 'none';
     $('summary').style.display = 'none';
+    $('savebar').style.display = 'none';
     $('emptyState').style.display = 'block';
   }
 
@@ -198,6 +216,8 @@
       const body = $('tbody'); body.innerHTML = '';
       r.roster.forEach(function (st) { body.appendChild(renderRow(st)); });
       $('panel').style.display = 'block';
+      $('savebar').style.display = 'flex';
+      updateSaveHint();
     } catch (e) {}
   }
 
@@ -233,53 +253,118 @@
       '<td>' + sub + '</td>' +
       '<td>' + check + '</td>' +
       '<td>' + scoreCell + '</td>' +
-      '<td>' + noteCell + '</td>';
+      '<td>' + noteCell + '</td>' +
+      '<td><button class="btn-saverow saved" data-saverow disabled><i class="ti ti-check" aria-hidden="true"></i> บันทึกแล้ว</button></td>';
     return tr;
   }
   function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
-  // ติ๊ก "ตรวจแล้ว" — ส่งคะแนนในแถวเดียวกันไปพร้อมกัน
+  // ===== ตรรกะบันทึกคะแนน/หมายเหตุ =====
+  // บันทึกหนึ่งแถว: ส่งคะแนน (ถ้าตรวจแล้ว) + หมายเหตุ
+  async function saveRow(tr, opts) {
+    opts = opts || {};
+    const cb = tr.querySelector('.rev-cb');
+    const scoreInp = tr.querySelector('.score-inp');
+    const noteInp = tr.querySelector('.note-inp');
+    const submissionId = tr.getAttribute('data-sub');
+    const studentId = tr.getAttribute('data-student');
+    const assignmentId = $('assignmentSel').value;
+    let ok = true;
+
+    // คะแนน + ตรวจแล้ว (ผูกกัน) — บันทึกเมื่อมี submissionId และติ๊กตรวจ
+    if (submissionId && cb) {
+      const reviewed = cb.checked;
+      const payload = { submissionId: submissionId, reviewed: reviewed };
+      if (reviewed && scoreInp && scoreInp.value.trim() !== '') payload.score = Number(scoreInp.value);
+      try { const r = await api('markReviewed', payload); if (!r || !r.ok) ok = false; } catch (e) { ok = false; }
+    }
+    // หมายเหตุ — บันทึกได้ทุกคน (รวมยังไม่ส่ง)
+    if (noteInp) {
+      try { const r = await api('saveNote', { assignmentId: assignmentId, studentId: studentId, note: noteInp.value }); if (!r || !r.ok) ok = false; } catch (e) { ok = false; }
+    }
+    if (ok && !opts.silent) markRowSaved(tr);
+    if (ok && $('assignmentSel').value) refreshSummaryOnly($('assignmentSel').value);
+    return ok;
+  }
+
+  function rowSaveBtn(tr) { return tr.querySelector('[data-saverow]'); }
+  function markRowDirty(tr) {
+    const b = rowSaveBtn(tr); if (!b) return;
+    b.disabled = false;
+    b.className = 'btn-saverow dirty';
+    b.innerHTML = '<i class="ti ti-device-floppy" aria-hidden="true"></i> บันทึก';
+    updateSaveHint();
+  }
+  function markRowSaved(tr) {
+    const b = rowSaveBtn(tr); if (!b) return;
+    b.disabled = true;
+    b.className = 'btn-saverow saved';
+    b.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> บันทึกแล้ว';
+    updateSaveHint();
+  }
+  function dirtyRows() { return Array.prototype.slice.call($('tbody').querySelectorAll('tr')).filter(function (tr) { const b = rowSaveBtn(tr); return b && b.classList.contains('dirty'); }); }
+  function updateSaveHint() {
+    const n = dirtyRows().length;
+    const hint = $('saveHint');
+    if (n > 0) { hint.textContent = 'มี ' + n + ' แถวที่ยังไม่บันทึก'; hint.classList.add('show'); }
+    else { hint.classList.remove('show'); }
+  }
+
+  // ติ๊ก "ตรวจแล้ว" — บันทึกทันที (กันลืม) + อัปเดตสถานะปุ่ม
   $('tbody').addEventListener('change', async function (e) {
     const cb = e.target.closest('input.rev-cb');
     if (!cb) return;
-    const submissionId = cb.getAttribute('data-sub');
-    const reviewed = cb.checked;
     const tr = cb.closest('tr');
-    const scoreInp = tr.querySelector('.score-inp');
-    const scoreVal = (scoreInp && scoreInp.value.trim() !== '') ? Number(scoreInp.value) : undefined;
-    cb.disabled = true;
     const label = cb.parentNode;
-    try {
-      const payload = { submissionId: submissionId, reviewed: reviewed };
-      if (reviewed && scoreVal !== undefined) payload.score = scoreVal;
-      const r = await api('markReviewed', payload);
-      if (r && r.ok) {
-        label.lastChild.textContent = reviewed ? 'ตรวจแล้ว' : 'ตรวจ';
-        if ($('assignmentSel').value) refreshSummaryOnly($('assignmentSel').value);
-      } else { cb.checked = !reviewed; }
-    } catch (err) { cb.checked = !reviewed; }
+    label.lastChild.textContent = cb.checked ? 'ตรวจแล้ว' : 'ตรวจ';
+    cb.disabled = true;
+    const ok = await saveRow(tr, { silent: false });
+    if (!ok) { cb.checked = !cb.checked; label.lastChild.textContent = cb.checked ? 'ตรวจแล้ว' : 'ตรวจ'; }
     cb.disabled = false;
   });
 
-  // แก้คะแนนแล้วออกจากช่อง (blur) — บันทึกทันทีถ้าตรวจแล้ว / ถ้ายังไม่ตรวจจะบันทึกเมื่อติ๊กตรวจ
+  // พิมพ์/แก้คะแนนหรือหมายเหตุ -> ทำให้แถว dirty (ปุ่มรอกด)
+  $('tbody').addEventListener('input', function (e) {
+    const inp = e.target;
+    if (inp.classList && (inp.classList.contains('score-inp') || inp.classList.contains('note-inp'))) {
+      markRowDirty(inp.closest('tr'));
+    }
+  });
+
+  // กดปุ่มบันทึกรายแถว
+  $('tbody').addEventListener('click', async function (e) {
+    const btn = e.target.closest('[data-saverow]');
+    if (!btn || btn.disabled) return;
+    const tr = btn.closest('tr');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2" aria-hidden="true"></i> กำลังบันทึก...';
+    const ok = await saveRow(tr, { silent: false });
+    if (!ok) { markRowDirty(tr); }
+  });
+
+  // auto-save ตอนออกจากช่อง (กันลืม) — บันทึกเงียบๆ แล้วทำเครื่องหมายว่าบันทึกแล้ว
   $('tbody').addEventListener('blur', async function (e) {
     const inp = e.target;
-    if (inp.classList && inp.classList.contains('score-inp')) {
+    if (!inp.classList) return;
+    if (inp.classList.contains('score-inp') || inp.classList.contains('note-inp')) {
       const tr = inp.closest('tr');
-      const cb = tr.querySelector('.rev-cb');
-      // บันทึกคะแนนเฉพาะกรณีติ๊กตรวจแล้ว (คะแนนผูกกับการตรวจ)
-      if (cb && cb.checked && inp.value.trim() !== '') {
-        const submissionId = inp.getAttribute('data-sub');
+      const b = rowSaveBtn(tr);
+      if (b && b.classList.contains('dirty')) {
         flash(inp);
-        try { await api('markReviewed', { submissionId: submissionId, reviewed: true, score: Number(inp.value) }); } catch (err) {}
+        const ok = await saveRow(tr, { silent: false });
+        if (!ok) markRowDirty(tr);
       }
-    } else if (inp.classList && inp.classList.contains('note-inp')) {
-      const studentId = inp.getAttribute('data-student');
-      const assignmentId = $('assignmentSel').value;
-      flash(inp);
-      try { await api('saveNote', { assignmentId: assignmentId, studentId: studentId, note: inp.value }); } catch (err) {}
     }
   }, true);
+
+  // ปุ่มบันทึกทั้งหมด
+  $('saveAllBtn').addEventListener('click', async function () {
+    const rows = dirtyRows();
+    if (!rows.length) { return; }
+    this.disabled = true; this.innerHTML = '<i class="ti ti-loader-2" aria-hidden="true"></i> กำลังบันทึก...';
+    for (let i = 0; i < rows.length; i++) { await saveRow(rows[i], { silent: false }); }
+    this.disabled = false; this.innerHTML = '<i class="ti ti-device-floppy" aria-hidden="true"></i> บันทึกทั้งหมด';
+    updateSaveHint();
+  });
 
   function flash(el) {
     el.style.transition = 'background .15s'; el.style.background = '#DCEFC4';
