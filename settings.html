@@ -38,6 +38,10 @@
   .save-bar{display:flex;gap:10px;align-items:center;margin-top:16px}
   .denied{max-width:420px;margin:60px auto;text-align:center;background:#fff;border:0.5px solid var(--line);border-radius:16px;padding:34px 26px}
   .denied .ic{font-size:40px} .denied h2{font-size:18px;color:var(--green-d);margin-top:8px} .denied p{font-size:14px;color:var(--muted);margin-top:6px}
+  .pwrow{position:relative}
+  .pwrow input{width:100%;padding-right:44px}
+  .pweye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:18px}
+  .pweye:hover{color:var(--green);background:var(--green-l)}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--green-d);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;display:none;z-index:30;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
   .switch{display:flex;align-items:center;gap:10px;margin-top:6px}
   .switch select{width:auto;min-width:130px}
@@ -132,27 +136,86 @@
         '<div class="hint">เวลานี้จะถูกเติมให้อัตโนมัติเมื่อสร้างงานใหม่</div>' +
       '</div>' +
       '<div class="card"><h2>การแจ้งเตือน LINE</h2>' +
-        '<div class="desc">แจ้งผู้ปกครองเมื่อนักเรียนส่งงาน และเตือนงานค้างส่งอัตโนมัติ</div>' +
+        '<div class="desc">แจ้งผู้ปกครองรายคนเมื่อนักเรียนส่งงาน + ส่งสรุปภาพรวมเข้ากลุ่ม</div>' +
         '<label>เปิดใช้การแจ้งเตือน</label><div class="switch"><select id="lineEnabledInp"><option value="true">เปิด</option><option value="false">ปิด</option></select></div>' +
         '<label>LINE Channel Access Token</label><input id="lineTokenInp" type="text" placeholder="เว้นว่างไว้เพื่อคงค่าเดิม">' +
         '<div class="hint">ใส่ Token จาก LINE Developers Console · ระบบจะไม่แสดง Token เดิมเพื่อความปลอดภัย</div>' +
         '<label>ลิงก์เพิ่มเพื่อน LINE OA (สำหรับหน้าผูกผู้ปกครอง)</label><input id="lineAddFriendUrlInp" type="text" placeholder="https://lin.ee/...">' +
         '<label>เปิดให้ผู้ปกครองค้นหารหัสนักเรียน (หน้า parent.html)</label><div class="switch"><select id="parentLookupEnabledInp"><option value="false">ปิด (แนะนำ)</option><option value="true">เปิด</option></select></div>' +
         '<div class="hint">หากเปิด ใครก็ค้นชื่อเพื่อดูรหัสนักเรียนได้ผ่านหน้าสาธารณะ — เปิดเฉพาะเมื่อจำเป็น</div>' +
-        '<div class="save-bar"><button class="btn btn-outline" id="reminderBtn">ตั้งการเตือนงานค้างอัตโนมัติ</button></div>' +
+        '<div class="save-bar"><button class="btn btn-outline" id="reminderBtn"><i class="ti ti-clock-bolt" aria-hidden="true"></i> ตั้งการเตือนงานค้างอัตโนมัติ</button></div>' +
       '</div>' +
-      '<div class="save-bar"><button class="btn btn-green" id="saveBtn">บันทึกการตั้งค่าทั้งหมด</button></div>';
+      '<div class="card"><h2><i class="ti ti-users-group" aria-hidden="true"></i> กลุ่ม LINE (สรุปภาพรวม)</h2>' +
+        '<div class="desc">ส่งสรุปภาพรวมรายวันเข้ากลุ่ม โดย<b>ไม่ระบุชื่อเด็กรายคน</b> เพื่อคุ้มครองข้อมูลส่วนตัวของนักเรียน</div>' +
+        '<label>เปิดส่งสรุปเข้ากลุ่ม</label><div class="switch"><select id="lineGroupEnabledInp"><option value="false">ปิด</option><option value="true">เปิด</option></select></div>' +
+        '<label>Group ID ของกลุ่ม</label><input id="lineGroupIdInp" type="text" placeholder="เชิญ OA เข้ากลุ่มแล้วพิมพ์ \'ลงทะเบียนกลุ่ม\' เพื่อรับอัตโนมัติ">' +
+        '<div class="hint">วิธีง่ายสุด: เชิญ LINE OA เข้ากลุ่ม แล้วพิมพ์ในกลุ่มว่า <b>ลงทะเบียนกลุ่ม</b> ระบบจะบันทึก Group ID ให้เอง · หรือกดทดสอบส่งด้านล่าง</div>' +
+        '<div class="save-bar"><button class="btn btn-outline" id="testGroupBtn"><i class="ti ti-send" aria-hidden="true"></i> ทดสอบส่งสรุปวันนี้เข้ากลุ่ม</button></div>' +
+      '</div>' +
+      '<div class="card"><h2><i class="ti ti-key" aria-hidden="true"></i> เปลี่ยนรหัสผ่านของฉัน</h2>' +
+        '<div class="desc">เปลี่ยนรหัสผ่านบัญชีที่กำลังเข้าสู่ระบบอยู่</div>' +
+        '<label>รหัสผ่านเดิม</label>' +
+        '<div class="pwrow"><input id="oldPw" type="password" placeholder="กรอกรหัสผ่านเดิม"><button type="button" class="pweye" data-eye="oldPw" aria-label="แสดงรหัสผ่าน"><i class="ti ti-eye"></i></button></div>' +
+        '<label>รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)</label>' +
+        '<div class="pwrow"><input id="newPw" type="password" placeholder="กรอกรหัสผ่านใหม่"><button type="button" class="pweye" data-eye="newPw" aria-label="แสดงรหัสผ่าน"><i class="ti ti-eye"></i></button></div>' +
+        '<label>ยืนยันรหัสผ่านใหม่</label>' +
+        '<div class="pwrow"><input id="newPw2" type="password" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"><button type="button" class="pweye" data-eye="newPw2" aria-label="แสดงรหัสผ่าน"><i class="ti ti-eye"></i></button></div>' +
+        '<div class="save-bar"><button class="btn btn-green" id="changePwBtn"><i class="ti ti-lock-check" aria-hidden="true"></i> เปลี่ยนรหัสผ่าน</button></div>' +
+      '</div>' +
+      '<div class="save-bar"><button class="btn btn-green" id="saveBtn"><i class="ti ti-device-floppy" aria-hidden="true"></i> บันทึกการตั้งค่าทั้งหมด</button></div>';
 
     $('saveBtn').addEventListener('click', saveAll);
     $('reminderBtn').addEventListener('click', installReminder);
+    $('testGroupBtn').addEventListener('click', testGroup);
+    $('changePwBtn').addEventListener('click', changePassword);
+    bindPwEyes();
     loadSettings();
   }
 
-  const KEYS = ['schoolName', 'logoUrl', 'currentYear', 'currentTerm', 'defaultDueTime', 'lineEnabled', 'lineToken', 'lineAddFriendUrl', 'parentLookupEnabled'];
+  // ปุ่มเปิด-ปิดรหัสผ่านในการ์ดเปลี่ยนรหัส
+  function bindPwEyes() {
+    document.querySelectorAll('.pweye').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const inp = $(btn.getAttribute('data-eye'));
+        const icon = btn.querySelector('i');
+        if (inp.type === 'password') { inp.type = 'text'; icon.className = 'ti ti-eye-off'; }
+        else { inp.type = 'password'; icon.className = 'ti ti-eye'; }
+      });
+    });
+  }
+
+  async function changePassword() {
+    const oldPassword = $('oldPw').value;
+    const newPassword = $('newPw').value;
+    const confirm2 = $('newPw2').value;
+    if (!oldPassword || !newPassword) { toast('กรุณากรอกรหัสผ่านให้ครบ'); return; }
+    if (newPassword.length < 6) { toast('รหัสผ่านใหม่ต้องยาวอย่างน้อย 6 ตัวอักษร'); return; }
+    if (newPassword !== confirm2) { toast('รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน'); return; }
+    $('changePwBtn').disabled = true;
+    try {
+      const r = await api('changePassword', { oldPassword: oldPassword, newPassword: newPassword });
+      if (r && r.ok) {
+        toast('เปลี่ยนรหัสผ่านสำเร็จ');
+        $('oldPw').value = ''; $('newPw').value = ''; $('newPw2').value = '';
+      } else { toast((r && r.error) || 'เปลี่ยนรหัสผ่านไม่สำเร็จ'); }
+    } catch (e) { toast('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); }
+    $('changePwBtn').disabled = false;
+  }
+
+  async function testGroup() {
+    $('testGroupBtn').disabled = true;
+    try {
+      const r = await api('testGroupMessage', {});
+      toast(r && r.ok ? 'ส่งสรุปเข้ากลุ่มแล้ว ลองเช็กในกลุ่ม LINE' : ((r && r.error) || 'ส่งไม่สำเร็จ'));
+    } catch (e) { toast('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'); }
+    $('testGroupBtn').disabled = false;
+  }
+
+  const KEYS = ['schoolName', 'logoUrl', 'currentYear', 'currentTerm', 'defaultDueTime', 'lineEnabled', 'lineToken', 'lineAddFriendUrl', 'parentLookupEnabled', 'lineGroupEnabled', 'lineGroupId'];
   const FIELD = {
     schoolName: 'schoolNameInp', logoUrl: 'logoUrlInp', currentYear: 'currentYearInp',
     currentTerm: 'currentTermInp', defaultDueTime: 'defaultDueTimeInp',
-    lineEnabled: 'lineEnabledInp', lineToken: 'lineTokenInp', lineAddFriendUrl: 'lineAddFriendUrlInp', parentLookupEnabled: 'parentLookupEnabledInp'
+    lineEnabled: 'lineEnabledInp', lineToken: 'lineTokenInp', lineAddFriendUrl: 'lineAddFriendUrlInp', parentLookupEnabled: 'parentLookupEnabledInp', lineGroupEnabled: 'lineGroupEnabledInp', lineGroupId: 'lineGroupIdInp'
   };
 
   async function loadSettings() {
