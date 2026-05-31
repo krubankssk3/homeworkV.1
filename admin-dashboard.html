@@ -50,6 +50,11 @@
   .fill{height:100%;background:var(--green);border-radius:5px;width:0;transition:width .8s cubic-bezier(.22,.61,.36,1)}
   .ratecell{font-weight:600;color:var(--green-d);width:54px}
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:24px 10px}
+  .track-tabs{display:flex;gap:6px;margin-bottom:12px}
+  .ttab{display:inline-flex;align-items:center;gap:5px;border:0.5px solid #CBD9B0;background:#fff;color:var(--green-d);border-radius:9px;padding:8px 14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+  .ttab.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .ttab i{font-size:15px}
+  .mini{font-size:12px;color:var(--muted)}
   .loading{color:var(--muted);font-size:14px;text-align:center;padding:40px 10px}
   footer{margin-top:20px;padding:16px;border-top:0.5px solid var(--line);background:var(--green-l);font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
   footer b{color:var(--green-d);font-weight:600}
@@ -161,12 +166,54 @@
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="card reveal" style="animation-delay:.22s"><div class="ctitle"><i class="ti ti-list-details"></i> สรุปแยกตามวิชา/ห้อง</div><div id="subjTable"></div></div>';
+      '<div class="card reveal" style="animation-delay:.22s"><div class="ctitle"><i class="ti ti-list-details"></i> สรุปแยกตามวิชา/ห้อง</div><div id="subjTable"></div></div>' +
+      '<div class="card reveal" style="animation-delay:.28s"><div class="ctitle"><i class="ti ti-user-search"></i> ติดตามนักเรียน</div>' +
+        '<div class="cnote">รายชื่อนักเรียนที่ต้องติดตาม — ระบุตัวได้เพื่อตามงาน</div>' +
+        '<div class="track-tabs">' +
+          '<button class="ttab active" id="ttabNo" data-t="no"><i class="ti ti-x"></i> ยังไม่ส่ง (<span id="cntNo">0</span>)</button>' +
+          '<button class="ttab" id="ttabLate" data-t="late"><i class="ti ti-clock-exclamation"></i> ส่งช้า (<span id="cntLate">0</span>)</button>' +
+        '</div>' +
+        '<div id="trackBody"></div>' +
+      '</div>';
 
     runCountUps();
     renderSubjects(d.subjectSummary || []);
     drawTrend(d.trend || []);
+    setupTracking(d.notSubmitted || [], d.lateList || []);
   }
+
+  var trackData = { no: [], late: [] };
+  function setupTracking(notSub, late) {
+    trackData.no = notSub; trackData.late = late;
+    $('cntNo').textContent = notSub.length;
+    $('cntLate').textContent = late.length;
+    document.querySelectorAll('.ttab').forEach(function (t) {
+      t.addEventListener('click', function () {
+        document.querySelectorAll('.ttab').forEach(function (x) { x.classList.remove('active'); });
+        t.classList.add('active');
+        renderTrack(t.getAttribute('data-t'));
+      });
+    });
+    renderTrack('no');
+  }
+
+  function renderTrack(which) {
+    const list = trackData[which] || [];
+    const box = $('trackBody');
+    if (!list.length) {
+      box.innerHTML = '<div class="empty">' + (which === 'no' ? 'เยี่ยม! ไม่มีนักเรียนค้างส่ง' : 'ไม่มีนักเรียนส่งช้า') + '</div>';
+      return;
+    }
+    let html = '<table><thead><tr><th style="width:48px">เลขที่</th><th>ชื่อ-สกุล</th><th style="width:70px">ห้อง</th><th>วิชา · งาน</th><th style="width:96px">ครบกำหนด</th></tr></thead><tbody>';
+    list.forEach(function (r) {
+      html += '<tr><td>' + escapeHtml(r.seatNo) + '</td><td>' + escapeHtml(r.name) + '</td><td>' + escapeHtml(r.roomLabel) + '</td>' +
+        '<td>' + escapeHtml(r.subjectName) + ' · ' + escapeHtml(r.title) + '</td>' +
+        '<td class="mini">' + fmtDate(r.dueDate) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    box.innerHTML = html;
+  }
+  function fmtDate(v) { return String(v == null ? '' : v).substring(0, 10); }
 
   function metric(icon, lab, num, color, idx, suffix) {
     return '<div class="metric reveal" style="animation-delay:' + (idx * 0.05) + 's">' +
