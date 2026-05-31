@@ -110,7 +110,7 @@
 
   // ถ้าล็อกอินอยู่แล้ว ข้ามไปหน้าสแกน
   if (sessionStorage.getItem('bl_token')) {
-    location.replace('scan.html');
+    location.replace('admin-dashboard.html');
   }
 
   // โหลดชื่อ/โลโก้โรงเรียนมาแสดง
@@ -175,7 +175,7 @@
       if (r && r.ok) {
         sessionStorage.setItem('bl_token', r.token);
         sessionStorage.setItem('bl_session', JSON.stringify(r.session));
-        location.href = 'scan.html';
+        location.href = 'admin-dashboard.html';
       } else {
         showError((r && r.error) || 'เข้าสู่ระบบไม่สำเร็จ');
         setLoading(false);
