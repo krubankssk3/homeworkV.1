@@ -10,14 +10,20 @@
   body{font-family:system-ui,'Segoe UI',sans-serif;background:#F4F8EC;color:#2F5511;
     min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0}
   .box{text-align:center}
+  .lg{width:88px;height:88px;border-radius:50%;background:#fff;margin:0 auto 16px;display:flex;
+    align-items:center;justify-content:center;overflow:hidden;box-shadow:0 4px 18px rgba(94,154,45,.22)}
+  .lg img{width:78%;height:78%;object-fit:contain}
   .spin{width:34px;height:34px;border:3px solid #C7D3AC;border-top-color:#5E9A2D;border-radius:50%;
     margin:0 auto 14px;animation:s .7s linear infinite}
   @keyframes s{to{transform:rotate(360deg)}}
+  @media(prefers-reduced-motion:reduce){.spin{animation:none}}
   a{color:#5E9A2D}
 </style>
+  <link rel="icon" href="https://lh3.googleusercontent.com/d/1SpX1QE5ajLN-NiJmDuSkEjf5ith4Db5n">
 </head>
 <body>
   <div class="box">
+    <div class="lg"><img src="https://lh3.googleusercontent.com/d/1SpX1QE5ajLN-NiJmDuSkEjf5ith4Db5n" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"></div>
     <div class="spin"></div>
     <div>กำลังเข้าสู่ระบบส่งงาน...</div>
     <div style="margin-top:8px;font-size:14px">หากไม่เปลี่ยนหน้าอัตโนมัติ <a href="dashboard.html">คลิกที่นี่</a></div>
