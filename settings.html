@@ -79,6 +79,7 @@
   .swal2-container{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
   @media print{.bl-ov,.swal2-container{display:none!important}}
   </style>
+  <link rel="icon" href="https://lh3.googleusercontent.com/d/1SpX1QE5ajLN-NiJmDuSkEjf5ith4Db5n">
 </head>
 <body>
   <header>
@@ -112,9 +113,12 @@
   const BL_LOGO = 'https://lh3.googleusercontent.com/d/1SpX1QE5ajLN-NiJmDuSkEjf5ith4Db5n';
 
   // ใส่โลโก้ลงหัวเว็บ พร้อมสำรองอัตโนมัติหากรูปโหลดไม่ขึ้น
+  // ลิงก์โลโก้ชุดเก่าที่เลิกใช้ — ถ้าค่าในชีตยังเป็นตัวนี้ ให้มองข้ามและใช้โลโก้ใหม่
+  const BL_LOGO_STALE = ['img2.pic.in.th'];
   function setLogo(url) {
     const box = document.getElementById('logo');
     if (!box) return;
+    if (url && BL_LOGO_STALE.some(function (k) { return String(url).indexOf(k) !== -1; })) url = '';
     const img = document.createElement('img');
     img.alt = ''; img.referrerPolicy = 'no-referrer';
     let tried = false;
